@@ -2,13 +2,14 @@ console.log("SERVER STARTING");
 
 const express = require("express");
 const dotenv = require("dotenv");
+const path = require("path");
 
 dotenv.config();
 
 const app = express();
 
 app.use(express.json());
-app.use(express.static("."));
+app.use(express.static(path.join(__dirname, "..")));
 
 // Caches configuration
 const caches = {
@@ -161,23 +162,6 @@ const curatedNews = [
 ];
 
 async function fetchNewsFromAPI() {
-    // CURATED NEWS FALLBACK (RSS Parser placeholder for future integration)
-    /*
-    const Parser = require('rss-parser');
-    const parser = new Parser();
-    try {
-        const feed = await parser.parseURL('https://feeds.feedburner.com/some-ai-infrastructure-feed');
-        return feed.items.slice(0, 5).map(item => ({
-            headline: item.title,
-            source: item.creator || 'RSS Feed',
-            time: new Date(item.pubDate).toLocaleTimeString(),
-            category: 'AI Infrastructure',
-            riskTag: 'Medium Risk'
-        }));
-    } catch (e) {
-        return curatedNews;
-    }
-    */
     return curatedNews;
 }
 
