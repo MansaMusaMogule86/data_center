@@ -1,0 +1,4971 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS ULTIMATE — Planetary Data Center Intelligence</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300;1,600&display=swap');
+
+    :root {
+      --void: #030308;
+      --s1: #08080F;
+      --s2: #0D0D1A;
+      --s3: #121220;
+      --b1: rgba(255, 255, 255, 0.05);
+      --b2: rgba(255, 255, 255, 0.09);
+      --b3: rgba(255, 255, 255, 0.14);
+      --gold: #C8A96E;
+      --gold2: #E8C98E;
+      --golddim: rgba(200, 169, 110, 0.3);
+      --goldglow: rgba(200, 169, 110, 0.1);
+      --cyan: #00D4FF;
+      --cyanglow: rgba(0, 212, 255, 0.12);
+      --red: #FF4560;
+      --redglow: rgba(255, 69, 96, 0.12);
+      --grn: #00E396;
+      --grnglow: rgba(0, 227, 150, 0.1);
+      --amb: #FFB830;
+      --pur: #A78BFA;
+      --pink: #F472B6;
+      --txt: #EEEEF8;
+      --txt2: #8888A8;
+      --txt3: #44445A;
+      --font-display: 'Syne', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-serif: 'Cormorant Garamond', serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--void);
+      color: var(--txt);
+      font-family: var(--font-display);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── CUSTOM CURSOR ── */
+    #cursor {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--gold);
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 80ms cubic-bezier(0.25, 1, 0.5, 1), width 120ms, height 120ms, opacity 120ms;
+      mix-blend-mode: difference;
+    }
+
+    #cursor-ring {
+      position: fixed;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(200, 169, 110, 0.5);
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 200ms cubic-bezier(0.25, 1, 0.5, 1), width 200ms, height 200ms, opacity 200ms;
+    }
+
+    body:hover #cursor {
+      opacity: 1;
+    }
+
+    /* ── BG ── */
+    #bgCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
+      pointer-events: none;
+    }
+
+    /* ── SHELL ── */
+    .shell {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 500;
+      padding: 0 48px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(3, 3, 8, 0.88);
+      backdrop-filter: blur(28px);
+      border-bottom: 1px solid var(--b1);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-hex {
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
+    }
+
+    .nav-hex svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .nav-brand {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: var(--txt);
+    }
+
+    .nav-brand span {
+      color: var(--gold);
+    }
+
+    .nav-sub {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      color: var(--txt3);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+    }
+
+    .nav-link {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--txt3);
+      cursor: pointer;
+      transition: all 120ms cubic-bezier(0.25, 1, 0.5, 1);
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: var(--gold);
+      border-color: var(--golddim);
+      background: var(--goldglow);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-clock {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--txt3);
+    }
+
+    .nav-clock span {
+      color: var(--gold);
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--grn);
+      letter-spacing: 0.14em;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: rgba(0, 227, 150, 0.06);
+      border: 1px solid rgba(0, 227, 150, 0.18);
+    }
+
+    .live-badge-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--grn);
+      box-shadow: 0 0 6px var(--grn);
+      animation: lpulse 1.6s ease infinite;
+    }
+
+    @keyframes lpulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+      }
+    }
+
+    /* ── SECTION WRAPPER ── */
+    section {
+      min-height: 100vh;
+      padding: 80px 48px;
+      position: relative;
+    }
+
+    section.compact {
+      min-height: auto;
+      padding: 60px 48px;
+    }
+
+    /* ── SECTION HEADER ── */
+    .sec-head {
+      margin-bottom: 48px;
+    }
+
+    .sec-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--gold);
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sec-label::before {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    .sec-title {
+      font-family: var(--font-serif);
+      font-size: clamp(36px, 4vw, 60px);
+      font-weight: 300;
+      line-height: 1.08;
+      color: var(--txt);
+    }
+
+    .sec-title em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .sec-sub {
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--txt2);
+      line-height: 1.7;
+      max-width: 640px;
+    }
+
+    /* ══════════════════════════════════════════════
+   SECTION 1 — HERO
+══════════════════════════════════════════════ */
+    #hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 0 48px;
+      gap: 60px;
+      border-bottom: 1px solid var(--b1);
+    }
+
+    .hero-left {
+      padding: 80px 0;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--gold);
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      width: 20px;
+      height: 1px;
+      background: var(--gold);
+      display: block;
+    }
+
+    .hero-h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(56px, 6vw, 88px);
+      font-weight: 300;
+      line-height: 1.02;
+      letter-spacing: -0.01em;
+    }
+
+    .hero-h1 em {
+      font-style: italic;
+      color: var(--gold);
+      display: block;
+    }
+
+    .hero-body {
+      margin-top: 20px;
+      font-size: 15px;
+      color: var(--txt2);
+      line-height: 1.8;
+      max-width: 480px;
+    }
+
+    .hero-body strong {
+      color: var(--txt);
+      font-weight: 500;
+    }
+
+    .hero-cta {
+      margin-top: 32px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 150ms cubic-bezier(0.25, 1, 0.5, 1);
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold), #9A7030);
+      color: #000;
+    }
+
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(200, 169, 110, 0.3);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--txt2);
+      border: 1px solid var(--b3);
+    }
+
+    .btn-outline:hover {
+      color: var(--gold);
+      border-color: var(--golddim);
+      background: var(--goldglow);
+    }
+
+    .hero-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 32px;
+    }
+
+    .hpill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 13px;
+      border-radius: 7px;
+      background: var(--s2);
+      border: 1px solid var(--b2);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      animation: pillUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes pillUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.97);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .hpill:nth-child(1) {
+      animation-delay: .08s
+    }
+
+    .hpill:nth-child(2) {
+      animation-delay: .14s
+    }
+
+    .hpill:nth-child(3) {
+      animation-delay: .20s
+    }
+
+    .hpill:nth-child(4) {
+      animation-delay: .26s
+    }
+
+    .hpill:nth-child(5) {
+      animation-delay: .32s
+    }
+
+    .hpill:nth-child(6) {
+      animation-delay: .38s
+    }
+
+    .hpill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .hpill-val {
+      font-weight: 700;
+    }
+
+    .hpill-lab {
+      color: var(--txt3);
+      font-size: 9px;
+    }
+
+    /* Globe */
+    .hero-right {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #globeCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .globe-fade {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 28%, var(--void) 72%);
+      pointer-events: none;
+    }
+
+    .globe-cards-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .gcard {
+      position: absolute;
+      background: rgba(8, 8, 15, 0.88);
+      border: 1px solid var(--b2);
+      border-radius: 8px;
+      padding: 8px 13px;
+      backdrop-filter: blur(14px);
+      opacity: 0;
+      animation: gcardAnim ease infinite;
+    }
+
+    @keyframes gcardAnim {
+      0% {
+        opacity: 0;
+        transform: translateY(0);
+      }
+
+      8% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 1;
+        transform: translateY(-10px);
+      }
+
+      92% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-18px);
+      }
+    }
+
+    .gcard-loc {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      color: var(--txt3);
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .gcard-val {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    /* ── TICKER ── */
+    .ticker-wrap {
+      background: rgba(3, 3, 8, 0.92);
+      border-top: 1px solid var(--b1);
+      border-bottom: 1px solid var(--b1);
+      overflow: hidden;
+      padding: 10px 0;
+      position: relative;
+      z-index: 10;
+    }
+
+    .ticker-track {
+      display: flex;
+      gap: 0;
+      width: max-content;
+      animation: tickScroll 55s linear infinite;
+    }
+
+    @keyframes tickScroll {
+      0% {
+        transform: translateX(0);
+      }
+
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    .tick-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 28px;
+      border-right: 1px solid var(--b1);
+      white-space: nowrap;
+    }
+
+    .tick-k {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .tick-v {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .tick-sep {
+      color: var(--txt3);
+      font-size: 10px;
+    }
+
+    /* ══════════════════════════════════════════════
+   SECTION 2 — CRISIS DASHBOARD
+══════════════════════════════════════════════ */
+    .crisis-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .cblock {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 14px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 150ms cubic-bezier(0.25, 1, 0.5, 1), transform 150ms cubic-bezier(0.25, 1, 0.5, 1);
+      cursor: default;
+    }
+
+    .cblock:hover {
+      transform: translateY(-2px);
+    }
+
+    .cblock::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1.5px;
+    }
+
+    .cblock.g::before {
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+
+    .cblock.c::before {
+      background: linear-gradient(90deg, var(--cyan), transparent);
+    }
+
+    .cblock.r::before {
+      background: linear-gradient(90deg, var(--red), transparent);
+    }
+
+    .cblock.gr::before {
+      background: linear-gradient(90deg, var(--grn), transparent);
+    }
+
+    .cblock.p::before {
+      background: linear-gradient(90deg, var(--pur), transparent);
+    }
+
+    .cblock.a::before {
+      background: linear-gradient(90deg, var(--amb), transparent);
+    }
+
+    /* animated shimmer */
+    .cblock::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.025) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform 700ms cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .cblock:hover::after {
+      transform: translateX(100%);
+    }
+
+    .cb-lab {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .cb-num {
+      font-family: var(--font-mono);
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .cb-unit {
+      font-size: 14px;
+      font-weight: 400;
+      opacity: .65;
+    }
+
+    .cb-sub {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--txt3);
+      line-height: 1.5;
+    }
+
+    .cb-trend {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+    }
+
+    .trend-up {
+      color: var(--grn);
+    }
+
+    .trend-dn {
+      color: var(--red);
+    }
+
+    .trend-w {
+      color: var(--amb);
+    }
+
+    /* Charts row */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .chart-card {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .chart-head {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--b1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chart-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--txt2);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .chart-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .chart-body {
+      padding: 16px 20px 20px;
+    }
+
+    /* ══════════════════════════════════════════════
+   SECTION 3 — WORLD MAP
+══════════════════════════════════════════════ */
+    .map-container {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .map-toolbar {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--b1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .map-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .map-filters {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mf-btn {
+      padding: 5px 13px;
+      border-radius: 6px;
+      border: 1px solid var(--b2);
+      background: transparent;
+      color: var(--txt3);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 120ms cubic-bezier(0.25, 1, 0.5, 1);
+      letter-spacing: .08em;
+    }
+
+    .mf-btn:hover,
+    .mf-btn.active {
+      background: var(--goldglow);
+      border-color: var(--golddim);
+      color: var(--gold);
+    }
+
+    .map-svg-wrap {
+      position: relative;
+    }
+
+    #mainMap {
+      width: 100%;
+      display: block;
+      background: #05050F;
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.35), transparent);
+      animation: scanMove 7s ease infinite;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    @keyframes scanMove {
+      0% {
+        top: 0%;
+        opacity: 0;
+      }
+
+      5% {
+        opacity: 1;
+      }
+
+      95% {
+        opacity: 1;
+      }
+
+      100% {
+        top: 100%;
+        opacity: 0;
+      }
+    }
+
+    .map-tip {
+      position: absolute;
+      z-index: 20;
+      pointer-events: none;
+      background: var(--s2);
+      border: 1px solid var(--b3);
+      border-radius: 10px;
+      padding: 13px 16px;
+      min-width: 210px;
+      opacity: 0;
+      transform: translateY(4px) scale(0.98);
+      transition: opacity 120ms cubic-bezier(0.25, 1, 0.5, 1), transform 120ms cubic-bezier(0.25, 1, 0.5, 1);
+      backdrop-filter: blur(20px);
+    }
+
+    .map-tip.vis {
+      opacity: 1;
+      transform: none;
+    }
+
+    .mt-name {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .mt-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 3px;
+    }
+
+    .mt-k {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      letter-spacing: .12em;
+    }
+
+    .mt-v {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    .map-stats-bar {
+      padding: 14px 24px;
+      background: rgba(8, 8, 15, 0.6);
+      border-top: 1px solid var(--b1);
+      display: flex;
+      gap: 32px;
+    }
+
+    .msb-item {
+      text-align: center;
+    }
+
+    .msb-val {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .msb-lab {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* ── GLOBAL SIGNALS AND TELEMETRY ── */
+    #signals {
+      background: rgba(8, 8, 15, 0.4);
+      border-top: 1px solid var(--b1);
+      border-bottom: 1px solid var(--b1);
+    }
+    .signals-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .sig-card {
+      background: rgba(8, 8, 15, 0.65);
+      border: 1px solid var(--b1);
+      border-radius: 14px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .sig-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--golddim);
+    }
+    .sig-card-head {
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(90deg, rgba(255,255,255,0.01), transparent);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .sig-card-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: .14em;
+    }
+    .live-pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 6px var(--cyan);
+      animation: lpulse 1.8s ease infinite;
+    }
+    .sig-loading {
+      padding: 24px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--txt3);
+    }
+    .stock-list, .weather-list, .grid-metrics {
+      padding: 10px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .stock-row, .weather-row, .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+    .stock-row:last-child, .weather-row:last-child, .metric-row:last-child {
+      border-bottom: none;
+    }
+    .stock-sym {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--txt);
+    }
+    .stock-name {
+      font-size: 10px;
+      color: var(--txt3);
+      margin-left: 6px;
+      font-family: var(--font-display);
+    }
+    .stock-vals {
+      text-align: right;
+    }
+    .stock-price {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .stock-change {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      margin-top: 1px;
+    }
+    .stock-change.up { color: var(--grn); }
+    .stock-change.down { color: var(--red); }
+    
+    .weather-loc {
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .weather-detail {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      margin-top: 1px;
+    }
+    .weather-vals {
+      text-align: right;
+    }
+    .weather-temp {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+    .weather-cond {
+      font-size: 10px;
+      color: var(--txt2);
+      margin-top: 1px;
+    }
+    .metric-label {
+      font-size: 11px;
+      color: var(--txt2);
+    }
+    .metric-val {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .metric-divider {
+      height: 1px;
+      background: var(--b1);
+      margin: 4px 0;
+    }
+    .alerts-log-card {
+      background: rgba(8, 8, 15, 0.65);
+      border: 1px solid var(--b1);
+      border-radius: 14px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      overflow: hidden;
+      margin-top: 20px;
+      transition: border-color 0.2s ease;
+    }
+    .alerts-log-card:hover {
+      border-color: var(--golddim);
+    }
+    .alerts-log-list {
+      padding: 18px;
+      max-height: 300px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .alert-card {
+      background: rgba(13, 13, 26, 0.45);
+      border: 1px solid var(--b1);
+      border-radius: 8px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: all 0.2s ease;
+    }
+    .alert-card:hover {
+      border-color: var(--golddim);
+      background: rgba(200, 169, 110, 0.05);
+      transform: translateY(-1px);
+    }
+    .alert-card.critical { border-left: 3px solid var(--red); }
+    .alert-card.warning { border-left: 3px solid var(--amb); }
+    .alert-card.info { border-left: 3px solid var(--cyan); }
+    .alert-card.success { border-left: 3px solid var(--grn); }
+    
+    .alert-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .alert-type {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 700;
+    }
+    .alert-type.critical { background: rgba(255, 69, 96, 0.1); color: var(--red); border: 1px solid rgba(255, 69, 96, 0.2); }
+    .alert-type.warning { background: rgba(255, 184, 48, 0.1); color: var(--amb); border: 1px solid rgba(255, 184, 48, 0.2); }
+    .alert-type.info { background: rgba(0, 212, 255, 0.1); color: var(--cyan); border: 1px solid rgba(0, 212, 255, 0.2); }
+    .alert-type.success { background: rgba(0, 227, 150, 0.1); color: var(--grn); border: 1px solid rgba(0, 227, 150, 0.2); }
+    .alert-title {
+      font-size: 11px;
+      color: var(--txt2);
+      flex: 1;
+    }
+    .alert-time {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+    }
+    
+    /* Report Generator Modal */
+    .report-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 3, 8, 0.85);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(8px);
+    }
+    .report-modal.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .report-modal-content {
+      background: var(--s1);
+      border: 1px solid var(--b2);
+      width: 90%;
+      max-width: 800px;
+      max-height: 85vh;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(200, 169, 110, 0.05);
+      overflow: hidden;
+      transform: translateY(20px) scale(0.98);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .report-modal.open .report-modal-content {
+      transform: none;
+    }
+    .report-modal-head {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--b1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(90deg, rgba(200, 169, 110, 0.04), transparent);
+    }
+    .report-modal-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .08em;
+    }
+    .report-modal-close {
+      background: transparent;
+      border: none;
+      color: var(--txt3);
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 150ms;
+    }
+    .report-modal-close:hover {
+      color: var(--gold);
+    }
+    .report-modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      font-family: var(--font-display);
+      font-size: 13px;
+      color: var(--txt2);
+      line-height: 1.7;
+    }
+    .report-modal-body h1, .report-modal-body h2, .report-modal-body h3 {
+      color: var(--gold);
+      font-family: var(--font-display);
+      margin-top: 20px;
+      margin-bottom: 10px;
+      letter-spacing: .03em;
+    }
+    .report-modal-body h1 { font-size: 18px; border-bottom: 1px solid var(--b1); padding-bottom: 6px; }
+    .report-modal-body h2 { font-size: 15px; }
+    .report-modal-body h3 { font-size: 13px; }
+    .report-modal-body p { margin-bottom: 12px; }
+    .report-modal-body ul, .report-modal-body ol { margin-bottom: 14px; padding-left: 20px; }
+    .report-modal-body li { margin-bottom: 6px; }
+    .report-modal-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+    .report-modal-body th, .report-modal-body td {
+      border: 1px solid var(--b1);
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .report-modal-body th {
+      background: var(--s2);
+      color: var(--gold);
+    }
+    .report-modal-foot {
+      padding: 16px 24px;
+      border-top: 1px solid var(--b1);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: var(--s2);
+    }
+    
+    /* Custom button styling within signals */
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold), #9A7030);
+      color: #000;
+      border: none;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 11px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      letter-spacing: .06em;
+      transition: all 120ms ease;
+    }
+    .btn-gold:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(200, 169, 110, 0.2);
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--b2);
+      color: var(--txt2);
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 11px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 120ms ease;
+    }
+    .btn-outline:hover {
+      border-color: var(--golddim);
+      color: var(--gold);
+    }
+
+    /* Map Node filtering states */
+    .map-node {
+      transition: opacity 0.3s ease, filter 0.3s ease;
+    }
+    .map-node.dimmed {
+      opacity: 0.15 !important;
+      filter: grayscale(80%) blur(0.5px);
+    }
+    .map-node.highlighted {
+      opacity: 1 !important;
+      filter: none;
+    }
+
+    /* ══════════════════════════════════════════════
+   SECTION 4 — HYPERSCALER WAR ROOM
+══════════════════════════════════════════════ */
+    .war-room {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .company-card {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: border-color 150ms cubic-bezier(0.25, 1, 0.5, 1), transform 150ms cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .company-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--b3);
+    }
+
+    .cc-head {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--b1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cc-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cc-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      border: 1px solid var(--b2);
+    }
+
+    .cc-name {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .cc-sub {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      letter-spacing: .1em;
+      margin-top: 2px;
+    }
+
+    .cc-capex {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .cc-body {
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .cc-stat {
+      background: var(--s2);
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--b1);
+    }
+
+    .cc-stat-lab {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      letter-spacing: .12em;
+      margin-bottom: 4px;
+    }
+
+    .cc-stat-val {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .cc-news {
+      padding: 12px 20px;
+      border-top: 1px solid var(--b1);
+    }
+
+    .cc-news-txt {
+      font-size: 11px;
+      color: var(--txt2);
+      line-height: 1.5;
+    }
+
+    .cc-news-tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 8px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-bottom: 4px;
+      letter-spacing: .1em;
+    }
+
+    .tag-v {
+      background: rgba(0, 227, 150, .1);
+      color: var(--grn);
+      border: 1px solid rgba(0, 227, 150, .2);
+    }
+
+    .tag-c {
+      background: rgba(255, 184, 48, .1);
+      color: var(--amb);
+      border: 1px solid rgba(255, 184, 48, .2);
+    }
+
+    .tag-r {
+      background: rgba(255, 69, 96, .1);
+      color: var(--red);
+      border: 1px solid rgba(255, 69, 96, .2);
+    }
+
+    /* Market share bars */
+    .market-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 16px 20px;
+    }
+
+    .mb-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 60px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .mb-name {
+      font-size: 11px;
+      color: var(--txt2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mb-track {
+      height: 5px;
+      background: var(--s3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .mb-fill {
+      height: 100%;
+      border-radius: 3px;
+      transform-origin: left;
+      transform: scaleX(0);
+      transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .mb-pct {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    /* ══════════════════════════════════════════════
+   SECTION 5 — CRISIS INTELLIGENCE
+══════════════════════════════════════════════ */
+    .crisis-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .ct-item {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 24px;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--b1);
+      position: relative;
+    }
+
+    .ct-item:last-child {
+      border-bottom: none;
+    }
+
+    .ct-item::before {
+      content: '';
+      position: absolute;
+      left: 113px;
+      top: 32px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--s1);
+    }
+
+    .ct-date {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--txt3);
+      padding-top: 4px;
+      letter-spacing: .08em;
+    }
+
+    .ct-content {}
+
+    .ct-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--txt);
+    }
+
+    .ct-body {
+      font-size: 12px;
+      color: var(--txt2);
+      line-height: 1.7;
+    }
+
+    .ct-badges {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ct-badge {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .crisis-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    /* Geopolitical map */
+    .geo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .geo-card {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 10px;
+      padding: 14px;
+      transition: all 150ms cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .geo-card:hover {
+      border-color: var(--b3);
+      background: var(--s2);
+    }
+
+    .geo-flag {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    .geo-country {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .geo-status {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: .1em;
+      padding: 2px 7px;
+      border-radius: 3px;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
+    .geo-detail {
+      font-size: 11px;
+      color: var(--txt2);
+      line-height: 1.5;
+    }
+
+    /* ══════════════════════════════════════════════
+   SECTION 6 — ENERGY & NUCLEAR
+══════════════════════════════════════════════ */
+    .energy-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .energy-card {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .nuclear-list {
+      padding: 0;
+    }
+
+    .nuke-item {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--b1);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: background 120ms cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .nuke-item:hover {
+      background: var(--s2);
+    }
+
+    .nuke-item:last-child {
+      border-bottom: none;
+    }
+
+    .nuke-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .nuke-name {
+      font-size: 12px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .nuke-detail {
+      font-size: 11px;
+      color: var(--txt2);
+      margin-top: 2px;
+    }
+
+    .nuke-badge {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      letter-spacing: .08em;
+    }
+
+    .power-sources {
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ps-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ps-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+      width: 24px;
+      text-align: center;
+    }
+
+    .ps-name {
+      font-size: 11px;
+      color: var(--txt2);
+      width: 80px;
+      flex-shrink: 0;
+    }
+
+    .ps-track {
+      flex: 1;
+      height: 6px;
+      background: var(--s3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .ps-fill {
+      height: 100%;
+      border-radius: 3px;
+      transform-origin: left;
+      transform: scaleX(0);
+      transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .ps-pct {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      width: 36px;
+      text-align: right;
+    }
+
+    /* ══════════════════════════════════════════════
+   SECTION 7 — AI INTELLIGENCE ENGINE
+══════════════════════════════════════════════ */
+    .ai-wrapper {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .ai-head {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--b1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(90deg, rgba(200, 169, 110, 0.04), transparent);
+    }
+
+    .ai-head-l {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .ai-orb {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(200, 169, 110, .12), rgba(0, 212, 255, .08));
+      border: 1px solid rgba(200, 169, 110, .22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      animation: orbGlow 3s ease infinite;
+    }
+
+    @keyframes orbGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(200, 169, 110, .2);
+      }
+
+      50% {
+        box-shadow: 0 0 0 10px rgba(200, 169, 110, 0);
+      }
+    }
+
+    .ai-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .ai-subtitle {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      letter-spacing: .12em;
+      margin-top: 2px;
+    }
+
+    .ai-chat {
+      padding: 20px 24px;
+    }
+
+    .ai-msgs {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ai-msgs::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .ai-msgs::-webkit-scrollbar-thumb {
+      background: var(--b3);
+      border-radius: 2px;
+    }
+
+    .amsg {
+      padding: 12px 15px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.7;
+      max-width: 86%;
+      animation: msgIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes msgIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px) scale(0.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .amsg.bot {
+      background: var(--s2);
+      border: 1px solid var(--b2);
+      color: var(--txt);
+      align-self: flex-start;
+    }
+
+    .amsg.usr {
+      background: rgba(200, 169, 110, .1);
+      border: 1px solid rgba(200, 169, 110, .2);
+      color: var(--txt);
+      align-self: flex-end;
+    }
+
+    .typing-wrap {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 0;
+      margin-bottom: 6px;
+    }
+
+    .typing-wrap.on {
+      display: flex;
+    }
+
+    .td {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--txt3);
+      animation: td 1.1s ease infinite;
+    }
+
+    .td:nth-child(2) {
+      animation-delay: .18s
+    }
+
+    .td:nth-child(3) {
+      animation-delay: .36s
+    }
+
+    @keyframes td {
+
+      0%,
+      60%,
+      100% {
+        transform: translateY(0);
+        opacity: .35;
+      }
+
+      30% {
+        transform: translateY(-5px);
+        opacity: 1;
+      }
+    }
+
+    .typing-lab {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      margin-left: 4px;
+      letter-spacing: .1em;
+    }
+
+    .ai-input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .ai-in {
+      flex: 1;
+      background: var(--s2);
+      border: 1px solid var(--b2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--txt);
+      font-family: var(--font-display);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 150ms cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .ai-in:focus {
+      border-color: rgba(200, 169, 110, .3);
+    }
+
+    .ai-in::placeholder {
+      color: var(--txt3);
+    }
+
+    .ai-send {
+      padding: 12px 22px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--gold), #9A7030);
+      border: none;
+      color: #000;
+      font-weight: 800;
+      font-family: var(--font-display);
+      font-size: 12px;
+      cursor: pointer;
+      letter-spacing: .06em;
+      transition: transform 120ms cubic-bezier(0.25, 1, 0.5, 1), box-shadow 200ms cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .ai-send:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 28px rgba(200, 169, 110, .3);
+    }
+
+    .ai-send:active {
+      transform: translateY(0);
+    }
+
+    .ai-suggestions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .ai-sug {
+      padding: 6px 13px;
+      border-radius: 6px;
+      background: var(--s2);
+      border: 1px solid var(--b2);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      cursor: pointer;
+      transition: all 120ms cubic-bezier(0.25, 1, 0.5, 1);
+      letter-spacing: .08em;
+    }
+
+    .ai-sug:hover {
+      color: var(--gold);
+      border-color: var(--golddim);
+      background: var(--goldglow);
+    }
+
+    /* ══════════════════════════════════════════════
+   COUNTRY RANKINGS (news-style)
+══════════════════════════════════════════════ */
+    .rank-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .rank-table {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .rt-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--b1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .rt-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--txt2);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .rt-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--b1);
+      transition: background 120ms cubic-bezier(0.25, 1, 0.5, 1);
+      cursor: pointer;
+      animation: rowIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .rt-row:hover {
+      background: var(--s2);
+    }
+
+    .rt-row:last-child {
+      border-bottom: none;
+    }
+
+    .rt-rank {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--txt3);
+      width: 22px;
+      flex-shrink: 0;
+    }
+
+    .rt-flag {
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .rt-name {
+      font-size: 12px;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    .rt-val {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .rt-bar-wrap {
+      width: 64px;
+      height: 3px;
+      background: var(--s3);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .rt-bar {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--gold), var(--cyan));
+      transition: width 1.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    @keyframes rowIn {
+      from {
+        opacity: 0;
+        transform: translateX(-6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* ══════════════════════════════════════════════
+   NEWS FEED
+══════════════════════════════════════════════ */
+    .news-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .news-card {
+      background: var(--s1);
+      border: 1px solid var(--b1);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .news-item {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--b1);
+      cursor: pointer;
+      transition: background 120ms cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .news-item:hover {
+      background: var(--s2);
+    }
+
+    .news-item:last-child {
+      border-bottom: none;
+    }
+
+    .ntag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      border-radius: 3px;
+      padding: 2px 7px;
+      margin-bottom: 5px;
+      font-size: 8px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .ntag.v {
+      background: rgba(0, 227, 150, .08);
+      color: var(--grn);
+      border: 1px solid rgba(0, 227, 150, .18);
+    }
+
+    .ntag.c {
+      background: rgba(255, 184, 48, .08);
+      color: var(--amb);
+      border: 1px solid rgba(255, 184, 48, .18);
+    }
+
+    .ntag.r {
+      background: rgba(255, 69, 96, .08);
+      color: var(--red);
+      border: 1px solid rgba(255, 69, 96, .18);
+    }
+
+    .ntag.p {
+      background: rgba(167, 139, 250, .08);
+      color: var(--pur);
+      border: 1px solid rgba(167, 139, 250, .18);
+    }
+
+    .nhead {
+      font-size: 12px;
+      color: var(--txt);
+      line-height: 1.55;
+    }
+
+    .nsrc {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      margin-top: 3px;
+      letter-spacing: .06em;
+    }
+
+    /* ══════════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════════ */
+    footer {
+      padding: 32px 48px;
+      border-top: 1px solid var(--b1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(3, 3, 8, 0.5);
+    }
+
+    .ft-l {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      line-height: 1.6;
+      letter-spacing: .06em;
+    }
+
+    .ft-r {
+      text-align: right;
+    }
+
+    .ft-r-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .ft-r-sub {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      letter-spacing: .1em;
+      margin-top: 2px;
+    }
+
+    /* ══════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════ */
+    @media(max-width:1100px) {
+      #hero {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-right {
+        display: none;
+      }
+
+      .crisis-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .charts-row,
+      .war-room,
+      .energy-grid,
+      .rank-grid,
+      .news-grid,
+      .crisis-two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .geo-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      nav .nav-links {
+        display: none;
+      }
+
+      .header-center {
+        display: none;
+      }
+    }
+
+    @media(max-width:640px) {
+      nav {
+        padding: 0 20px;
+      }
+
+      section {
+        padding: 48px 20px;
+      }
+
+      #hero {
+        padding: 0 20px;
+      }
+
+      .crisis-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .geo-grid {
+        grid-template-columns: 1fr;
+      }
+
+      footer {
+        padding: 24px 20px;
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+    }
+
+    /* ── NEWS SECTION GRID ── */
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .news-card {
+      background: rgba(8, 8, 15, 0.65);
+      border: 1px solid var(--b1);
+      border-radius: 14px;
+      padding: 20px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      transition: all 0.2s ease;
+    }
+    .news-card:hover {
+      border-color: var(--golddim);
+      transform: translateY(-2px);
+    }
+    .news-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+    }
+    .news-category {
+      color: var(--gold);
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .news-headline {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--txt);
+      line-height: 1.5;
+    }
+    .news-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .news-source {
+      font-size: 10px;
+      color: var(--txt2);
+    }
+    .news-risk-tag {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .news-risk-tag.critical { background: rgba(255, 69, 96, 0.1); color: var(--red); border: 1px solid rgba(255, 69, 96, 0.2); }
+    .news-risk-tag.high-risk { background: rgba(255, 184, 48, 0.1); color: var(--amb); border: 1px solid rgba(255, 184, 48, 0.2); }
+    .news-risk-tag.medium-risk { background: rgba(0, 212, 255, 0.1); color: var(--cyan); border: 1px solid rgba(0, 212, 255, 0.2); }
+    .news-risk-tag.optimal { background: rgba(0, 227, 150, 0.1); color: var(--grn); border: 1px solid rgba(0, 227, 150, 0.2); }
+
+    /* ── NODE INTELLIGENCE SIDE PANEL ── */
+    .node-intel-panel {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      bottom: 16px;
+      width: 330px;
+      background: rgba(8, 8, 15, 0.88);
+      border: 1px solid var(--b2);
+      border-radius: 12px;
+      padding: 20px;
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(200, 169, 110, 0.05);
+      z-index: 100;
+      overflow-y: auto;
+      transform: translateX(370px);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .node-intel-panel.open {
+      transform: translateX(0);
+    }
+    .node-intel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--b1);
+      padding-bottom: 10px;
+    }
+    .node-intel-close {
+      background: transparent;
+      border: none;
+      color: var(--txt3);
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 150ms;
+    }
+    .node-intel-close:hover {
+      color: var(--gold);
+    }
+    .ni-divider {
+      height: 1px;
+      background: var(--b1);
+      margin: 8px 0;
+    }
+    .ni-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+    }
+    .ni-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--txt3);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .ni-val {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--txt);
+      font-family: var(--font-mono);
+    }
+    .ni-section {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 4px 0;
+    }
+    .ni-desc {
+      font-size: 11px;
+      color: var(--txt2);
+      line-height: 1.5;
+    }
+    .ni-sub-label {
+      font-size: 10px;
+      color: var(--txt3);
+    }
+    .ni-sub-val {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--txt);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- CURSOR -->
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- BACKGROUNDS -->
+  <canvas id="bgCanvas"></canvas>
+  <div class="noise"></div>
+
+  <div class="shell">
+
+    <!-- ══════════════════════════════ NAV ══════════════════════════════ -->
+    <nav>
+      <div class="nav-logo">
+        <div class="nav-hex">
+          <svg viewBox="0 0 34 34" fill="none">
+            <polygon points="17,2 31,9.5 31,24.5 17,32 3,24.5 3,9.5" stroke="#C8A96E" stroke-width="1"
+              fill="rgba(200,169,110,0.06)" />
+            <polygon points="17,7 26,12 26,22 17,27 8,22 8,12" stroke="#C8A96E" stroke-width="0.5" fill="none"
+              opacity=".4" />
+            <circle cx="17" cy="17" r="3" fill="#C8A96E" />
+          </svg>
+        </div>
+        <div>
+          <div class="nav-brand">NEX<span>US</span></div>
+          <div class="nav-sub">Planetary Intelligence</div>
+        </div>
+      </div>
+      <div class="nav-links">
+        <a class="nav-link active" href="#hero">OVERVIEW</a>
+        <a class="nav-link" href="#crisis">CRISIS</a>
+        <a class="nav-link" href="#map">GLOBAL MAP</a>
+        <a class="nav-link" href="#warroom">WAR ROOM</a>
+        <a class="nav-link" href="#energy">ENERGY</a>
+        <a class="nav-link" href="#intel">NEXUS AI</a>
+      </div>
+      <div class="nav-right">
+        <div class="nav-clock">DUBAI <span id="clock">--:--:--</span></div>
+        <div class="live-badge">
+          <div class="live-badge-dot"></div>LIVE FEED
+        </div>
+      </div>
+    </nav>
+
+    <!-- ══════════════════════════════ HERO ══════════════════════════════ -->
+    <section id="hero">
+      <div class="hero-left">
+        <div class="hero-eyebrow">Planetary Data Center Intelligence · 2026</div>
+        <h1 class="hero-h1">
+          Where Power Flows,
+          <em>Civilisation Is Built.</em>
+        </h1>
+        <p class="hero-body">
+          A living, breathing map of Earth's digital nervous system — <strong>8,947 data centers</strong> across 170+
+          nations, consuming the energy of France, the water of <strong>1.3 billion people</strong>, burning through a
+          <strong>$3 trillion supercycle</strong> — while communities fight back, grids collapse, and nuclear reactors
+          come back from the dead to feed the beast.
+        </p>
+        <div class="hero-cta">
+          <a href="#crisis" class="btn btn-gold">→ ENTER THE CRISIS</a>
+          <a href="#intel" class="btn btn-outline">ASK NEXUS AI</a>
+        </div>
+        <div class="hero-pills">
+          <div class="hpill">
+            <div class="hpill-dot" style="background:#C8A96E;box-shadow:0 0 7px #C8A96E;"></div><span class="hpill-val"
+              style="color:#C8A96E;">8,947</span><span class="hpill-lab">Facilities</span>
+          </div>
+          <div class="hpill">
+            <div class="hpill-dot" style="background:#00D4FF;box-shadow:0 0 7px #00D4FF;"></div><span class="hpill-val"
+              style="color:#00D4FF;">122 GW</span><span class="hpill-lab">Capacity</span>
+          </div>
+          <div class="hpill">
+            <div class="hpill-dot" style="background:#FF4560;box-shadow:0 0 7px #FF4560;"></div><span class="hpill-val"
+              style="color:#FF4560;">$162B</span><span class="hpill-lab">Blocked</span>
+          </div>
+          <div class="hpill">
+            <div class="hpill-dot" style="background:#00E396;box-shadow:0 0 7px #00E396;"></div><span class="hpill-val"
+              style="color:#00E396;">200 GW</span><span class="hpill-lab">by 2030</span>
+          </div>
+          <div class="hpill">
+            <div class="hpill-dot" style="background:#FFB830;box-shadow:0 0 7px #FFB830;"></div><span class="hpill-val"
+              style="color:#FFB830;">1,050 TWh</span><span class="hpill-lab">Power 2026</span>
+          </div>
+          <div class="hpill">
+            <div class="hpill-dot" style="background:#A78BFA;box-shadow:0 0 7px #A78BFA;"></div><span class="hpill-val"
+              style="color:#A78BFA;">$3T</span><span class="hpill-lab">Investment</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <canvas id="globeCanvas"></canvas>
+        <div class="globe-fade"></div>
+        <div class="globe-cards-layer">
+          <div class="gcard" style="top:20%;left:8%;animation:gcardAnim 8s 0.3s ease infinite;">
+            <div class="gcard-loc">Virginia</div>
+            <div class="gcard-val" style="color:#C8A96E;">18 GW</div>
+          </div>
+          <div class="gcard" style="top:30%;right:10%;animation:gcardAnim 9s 2s ease infinite;">
+            <div class="gcard-loc">Frankfurt</div>
+            <div class="gcard-val" style="color:#00D4FF;">6.1 GW</div>
+          </div>
+          <div class="gcard" style="top:62%;left:14%;animation:gcardAnim 7.5s 4.5s ease infinite;">
+            <div class="gcard-loc">Stargate TX</div>
+            <div class="gcard-val" style="color:#A78BFA;">1.2 GW</div>
+          </div>
+          <div class="gcard" style="top:16%;right:6%;animation:gcardAnim 8.5s 1.2s ease infinite;">
+            <div class="gcard-loc">Inner Mongolia</div>
+            <div class="gcard-val" style="color:#FF4560;">22 GW</div>
+          </div>
+          <div class="gcard" style="bottom:22%;right:18%;animation:gcardAnim 9.5s 3.5s ease infinite;">
+            <div class="gcard-loc">Singapore</div>
+            <div class="gcard-val" style="color:#00E396;">2.1 GW</div>
+          </div>
+          <div class="gcard" style="bottom:35%;left:6%;animation:gcardAnim 8s 6s ease infinite;">
+            <div class="gcard-loc">Dubai UAE</div>
+            <div class="gcard-val" style="color:#C8A96E;">1.2 GW</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TICKER -->
+    <div class="ticker-wrap">
+      <div class="ticker-track" id="tickerTrack"></div>
+    </div>
+
+    <!-- ══════════════════════════════ CRISIS DASHBOARD ══════════════════════════════ -->
+    <section id="crisis">
+      <div class="sec-head">
+        <div class="sec-label">CRISIS DASHBOARD</div>
+        <h2 class="sec-title">The Numbers That <em>Break Nations.</em></h2>
+        <p class="sec-sub">The AI buildout has crossed every threshold. Power grids are saturating. Transformers are
+          backordered 48 months. Communities are blocking $162B in projects. This is no longer a future risk — it is the
+          present reality of June 2026.</p>
+      </div>
+
+      <div class="crisis-grid">
+        <div class="cblock g">
+          <div class="cb-lab">Total Global Facilities</div>
+          <div class="cb-num" style="color:#C8A96E;"><span class="count-el" data-to="8947">0</span></div>
+          <div class="cb-sub">170+ nations · 40% in USA · 1,297 hyperscale active</div>
+          <div class="cb-trend trend-up">↑ +14% CAGR to 2030</div>
+        </div>
+        <div class="cblock c">
+          <div class="cb-lab">Energy Consumed 2025</div>
+          <div class="cb-num" style="color:#00D4FF;">460<span class="cb-unit"> TWh</span></div>
+          <div class="cb-sub">= France's entire annual grid consumption</div>
+          <div class="cb-trend trend-w">→ Hits 1,050 TWh by 2026</div>
+        </div>
+        <div class="cblock r">
+          <div class="cb-lab">Water Footprint 2030</div>
+          <div class="cb-num" style="color:#FF4560;">9.3<span class="cb-unit">T L</span></div>
+          <div class="cb-sub">UN June 2026 · 1.3 billion people's annual needs</div>
+          <div class="cb-trend trend-dn">↑ 1.8M Olympic pools already used (2025)</div>
+        </div>
+        <div class="cblock gr">
+          <div class="cb-lab">CapEx Committed 2026</div>
+          <div class="cb-num" style="color:#00E396;">$650<span class="cb-unit">B</span></div>
+          <div class="cb-sub">Alphabet + Amazon + Meta + Microsoft alone</div>
+          <div class="cb-trend trend-up">↑ from $320B in 2025</div>
+        </div>
+        <div class="cblock p">
+          <div class="cb-lab">Projects Delayed/Blocked</div>
+          <div class="cb-num" style="color:#A78BFA;">$162<span class="cb-unit">B</span></div>
+          <div class="cb-sub">36+ projects · community opposition · grid limits</div>
+          <div class="cb-trend trend-dn">↑ 50% of 2026 projects face power delays</div>
+        </div>
+        <div class="cblock a">
+          <div class="cb-lab">Transformer Backlog</div>
+          <div class="cb-num" style="color:#FFB830;">48<span class="cb-unit">mo</span></div>
+          <div class="cb-sub">Lead time for high-voltage transformers in 2026</div>
+          <div class="cb-trend trend-dn">Was 12–18 months in 2023</div>
+        </div>
+        <div class="cblock r">
+          <div class="cb-lab">CO₂ Footprint 2025</div>
+          <div class="cb-num" style="color:#FF4560;">189<span class="cb-unit">Mt</span></div>
+          <div class="cb-sub">= New York City's entire annual carbon output</div>
+          <div class="cb-trend trend-w">AI chips: 20–25 kg CO₂ each, 10M+ shipped/yr</div>
+        </div>
+        <div class="cblock c">
+          <div class="cb-lab">US Power Shortfall 2028</div>
+          <div class="cb-num" style="color:#00D4FF;">49<span class="cb-unit">GW</span></div>
+          <div class="cb-sub">Morgan Stanley model · grid cannot keep pace</div>
+          <div class="cb-trend trend-dn">Grid responds in 4–10 yrs · capex deploys in 12–24mo</div>
+        </div>
+      </div>
+
+      <!-- CHARTS -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-head">
+            <div class="chart-title">
+              <div class="chart-dot" style="background:#C8A96E;"></div>Power Demand Growth (TWh)
+            </div>
+          </div>
+          <div class="chart-body"><canvas id="powerChart" height="160"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-head">
+            <div class="chart-title">
+              <div class="chart-dot" style="background:#00D4FF;"></div>Capacity by Region (GW)
+            </div>
+          </div>
+          <div class="chart-body"><canvas id="regionChart" height="160"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-head">
+            <div class="chart-title">
+              <div class="chart-dot" style="background:#FF4560;"></div>Water Use Trajectory (Bn L)
+            </div>
+          </div>
+          <div class="chart-body"><canvas id="waterChart" height="160"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════ GLOBAL SIGNALS ══════════════════════════════ -->
+    <section id="signals">
+      <div class="sec-head">
+        <div class="sec-label">LIVE INFRASTRUCTURE SIGNALS</div>
+        <h2 class="sec-title">Real-Time <em>Planetary Telemetry.</em></h2>
+        <p class="sec-sub">Track stock dynamics, power grid loading, carbon footprints, and weather stress parameters of global hyperscaler hubs.</p>
+      </div>
+
+      <div class="signals-actions" style="margin-bottom: 24px; display: flex; justify-content: flex-end;">
+        <button class="btn btn-gold" id="btnGenReport" onclick="generateReport()">
+          <span class="report-icon">⚡</span> GENERATE INTELLIGENCE REPORT
+        </button>
+      </div>
+
+      <div class="signals-grid">
+        <!-- Stock Telemetry -->
+        <div class="sig-card">
+          <div class="sig-card-head">
+            <div class="sig-card-title">MARKET CAPITAL SIGNALS</div>
+            <div class="live-pulse-dot"></div>
+          </div>
+          <div class="stock-list" id="stockSignalsList">
+            <div class="sig-loading">Querying stock tickers...</div>
+          </div>
+        </div>
+
+        <!-- Weather Telemetry -->
+        <div class="sig-card">
+          <div class="sig-card-head">
+            <div class="sig-card-title">ENVIRONMENTAL LOAD SIGNALS</div>
+            <div class="live-pulse-dot"></div>
+          </div>
+          <div class="weather-list" id="weatherSignalsList">
+            <div class="sig-loading">Querying environmental sensors...</div>
+          </div>
+        </div>
+
+        <!-- Grid Load Telemetry -->
+        <div class="sig-card">
+          <div class="sig-card-head">
+            <div class="sig-card-title">GRID LOAD TELEMETRY</div>
+            <div class="live-pulse-dot" style="background: var(--cyan); box-shadow: 0 0 6px var(--cyan);"></div>
+          </div>
+          <div class="grid-metrics" id="gridLoadList">
+            <div class="sig-loading">Loading grid load data...</div>
+          </div>
+        </div>
+
+        <!-- Carbon Intensity Telemetry -->
+        <div class="sig-card">
+          <div class="sig-card-head">
+            <div class="sig-card-title">CARBON CO2 INTENSITY</div>
+            <div class="live-pulse-dot" style="background: var(--grn); box-shadow: 0 0 6px var(--grn);"></div>
+          </div>
+          <div class="grid-metrics" id="carbonIntensityList">
+            <div class="sig-loading">Loading carbon footprint sensors...</div>
+          </div>
+        </div>
+
+        <!-- PUE Metrics Telemetry -->
+        <div class="sig-card">
+          <div class="sig-card-head">
+            <div class="sig-card-title">PUE PERFORMANCE METRICS</div>
+            <div class="live-pulse-dot" style="background: var(--gold); box-shadow: 0 0 6px var(--gold);"></div>
+          </div>
+          <div class="grid-metrics" id="pueMetricsList">
+            <div class="sig-loading">Loading PUE sensor arrays...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Log Alerts -->
+      <div class="alerts-log-card" style="margin-top: 20px;">
+        <div class="sig-card-head" style="border-bottom: 1px solid var(--b1); padding: 12px 18px;">
+          <div class="sig-card-title">SYSTEM ALERTS LOG</div>
+        </div>
+        <div class="alerts-log-list" id="alertsLogList">
+          <div class="sig-loading">Awaiting telemetry alerts...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════ LIVE AI INFRASTRUCTURE NEWS ══════════════════════════════ -->
+    <section id="news" class="compact">
+      <div class="sec-head">
+        <div class="sec-label">LIVE AI INFRASTRUCTURE NEWS</div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%; flex-wrap: wrap; gap: 12px;">
+          <h2 class="sec-title" style="margin-bottom: 0;">Real-Time <em>Infrastructure Intelligence.</em></h2>
+          <button class="btn btn-outline" onclick="fetchNews()" style="padding: 8px 16px;">
+            <span>🔄</span> REFRESH NEWS
+          </button>
+        </div>
+      </div>
+      <div class="news-grid" id="newsGridList">
+        <div class="sig-loading">Loading infrastructure news...</div>
+      </div>
+    </section>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="report-modal">
+      <div class="report-modal-content">
+        <div class="report-modal-head">
+          <div class="report-modal-title">
+            <span style="color: var(--gold);">NEXUS</span> EXECUTIVE INTELLIGENCE REPORT
+          </div>
+          <button class="report-modal-close" onclick="closeReportModal()">&times;</button>
+        </div>
+        <div class="report-modal-body" id="reportContent">
+          <!-- Dynamically populated -->
+        </div>
+        <div class="report-modal-foot">
+          <button class="btn btn-outline" id="btnCopyReport" onclick="copyReportText()">COPY REPORT TEXT</button>
+          <button class="btn btn-outline" onclick="closeReportModal()">CLOSE REPORT</button>
+          <button class="btn btn-gold" onclick="window.print()">PRINT REPORT</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════ MAP ══════════════════════════════ -->
+    <section id="map" class="compact">
+      <div class="sec-head">
+        <div class="sec-label">GLOBAL DEPLOYMENT MAP</div>
+        <h2 class="sec-title">Every Node. <em>Every Nation.</em></h2>
+      </div>
+      <div class="map-container">
+        <div class="map-toolbar">
+          <div class="map-title-row">
+            <div class="chart-dot"
+              style="background:#C8A96E;box-shadow:0 0 6px #C8A96E;animation:lpulse 2s ease infinite;width:7px;height:7px;border-radius:50%;">
+            </div>
+            <span id="mapStatusText" style="font-family:var(--font-mono);font-size:10px;color:var(--txt2);letter-spacing:.12em;">8,947 FACILITIES TRACKED · CLICK NODE FOR INTEL</span>
+          </div>
+          <div class="map-filters">
+            <button class="mf-btn active" onclick="setMapView('all',this)">ALL</button>
+            <button class="mf-btn" onclick="setMapView('hyper',this)">HYPERSCALE</button>
+            <button class="mf-btn" onclick="setMapView('crisis',this)">CRISIS ZONES</button>
+            <button class="mf-btn" onclick="setMapView('growth',this)">GROWTH</button>
+          </div>
+          <div class="live-badge">
+            <div class="live-badge-dot"></div>SCANNING
+          </div>
+        </div>
+        <div class="map-svg-wrap">
+          <div class="scan-line"></div>
+          <svg id="mainMap" viewBox="0 0 960 500" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="fgold">
+                <feGaussianBlur stdDeviation="5" result="b" />
+                <feMerge>
+                  <feMergeNode in="b" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="fcyan">
+                <feGaussianBlur stdDeviation="4" result="b" />
+                <feMerge>
+                  <feMergeNode in="b" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="fred">
+                <feGaussianBlur stdDeviation="4" result="b" />
+                <feMerge>
+                  <feMergeNode in="b" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="fpur">
+                <feGaussianBlur stdDeviation="3" result="b" />
+                <feMerge>
+                  <feMergeNode in="b" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <radialGradient id="rg_g" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#C8A96E" stop-opacity=".55" />
+                <stop offset="100%" stop-color="#C8A96E" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="rg_c" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#00D4FF" stop-opacity=".4" />
+                <stop offset="100%" stop-color="#00D4FF" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="rg_r" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#FF4560" stop-opacity=".4" />
+                <stop offset="100%" stop-color="#FF4560" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="rg_p" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#A78BFA" stop-opacity=".4" />
+                <stop offset="100%" stop-color="#A78BFA" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="rg_gr" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#00E396" stop-opacity=".4" />
+                <stop offset="100%" stop-color="#00E396" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+            <rect width="960" height="500" fill="#04040E" />
+            <!-- Continents -->
+            <path
+              d="M78,54 L228,40 L268,78 L278,118 L268,158 L238,198 L208,218 L182,202 L158,178 L128,168 L98,148 L73,118 Z"
+              fill="#131325" stroke="#1C1C32" stroke-width=".7" />
+            <path d="M98,143 L268,120 L286,158 L276,198 L226,218 L178,215 L135,211 L102,184 Z" fill="#1E1E14"
+              stroke="#28280C" stroke-width=".7" />
+            <path d="M135,210 L236,220 L231,257 L213,272 L193,261 L165,251 L140,240 Z" fill="#131325" stroke="#1C1C32"
+              stroke-width=".7" />
+            <path d="M180,272 L272,255 L312,300 L323,362 L292,422 L252,443 L215,422 L194,380 L174,328 L170,291 Z"
+              fill="#14142A" stroke="#1C1C32" stroke-width=".7" />
+            <path d="M280,16 L362,11 L383,44 L342,70 L291,53 Z" fill="#101020" stroke="#181830" stroke-width=".6" />
+            <path d="M391,58 L486,47 L519,79 L526,110 L495,131 L461,124 L421,120 L394,100 Z" fill="#181828"
+              stroke="#222234" stroke-width=".7" />
+            <path d="M385,64 L402,58 L407,80 L391,85 Z" fill="#202035" stroke="#28283A" stroke-width=".6" />
+            <path d="M420,58 L485,47 L510,65 L505,85 L460,92 L418,82 Z" fill="#171730" stroke="#1E1E3A"
+              stroke-width=".6" />
+            <path d="M391,128 L514,114 L549,161 L553,252 L512,342 L461,381 L421,360 L390,300 L370,230 L374,170 Z"
+              fill="#111122" stroke="#181830" stroke-width=".7" />
+            <path d="M512,110 L584,104 L604,141 L578,171 L542,165 L511,144 Z" fill="#131325" stroke="#1C1C32"
+              stroke-width=".7" />
+            <path d="M491,30 L763,22 L772,85 L722,100 L642,110 L561,100 L501,80 Z" fill="#10101E" stroke="#18182A"
+              stroke-width=".7" />
+            <path d="M641,90 L781,80 L802,130 L782,170 L722,184 L671,174 L641,150 Z" fill="#141428" stroke="#1C1C33"
+              stroke-width=".7" />
+            <path d="M571,140 L642,134 L652,202 L621,241 L590,230 L560,190 L555,164 Z" fill="#141428" stroke="#1C1C32"
+              stroke-width=".7" />
+            <path d="M681,170 L772,161 L792,201 L762,231 L722,220 L691,200 Z" fill="#111122" stroke="#181828"
+              stroke-width=".7" />
+            <path d="M791,100 L833,94 L843,130 L822,145 L796,134 Z" fill="#131326" stroke="#1C1C32" stroke-width=".6" />
+            <path d="M700,312 L822,296 L852,353 L841,413 L791,432 L731,421 L690,381 L681,340 Z" fill="#131226"
+              stroke="#1A1A2E" stroke-width=".7" />
+            <!-- Heatmaps -->
+            <circle cx="192" cy="167" r="70" fill="url(#rg_g)" opacity=".9" />
+            <circle cx="443" cy="90" r="45" fill="url(#rg_c)" opacity=".8" />
+            <circle cx="714" cy="140" r="40" fill="url(#rg_r)" opacity=".7" />
+            <circle cx="452" cy="140" r="30" fill="url(#rg_c)" opacity=".5" />
+            <!-- Fiber routes -->
+            <g fill="none" stroke-width=".7" opacity=".18" stroke-dasharray="4,9">
+              <path d="M231,160 Q315,93 396,72" stroke="#00D4FF" />
+              <path d="M396,72 Q485,82 714,130" stroke="#00D4FF" />
+              <path d="M714,130 Q762,120 802,120" stroke="#00D4FF" />
+              <path d="M231,160 Q233,243 241,328" stroke="#C8A96E" />
+              <path d="M602,184 Q660,202 718,217" stroke="#A78BFA" />
+              <path d="M561,147 Q578,164 602,184" stroke="#C8A96E" />
+              <path d="M396,72 Q472,85 571,140" stroke="#00D4FF" />
+              <path d="M192,167 Q300,280 310,300" stroke="#C8A96E" opacity=".5" />
+            </g>
+
+            <!-- NODES (all with SVG animate pulses) -->
+            <!-- Virginia - BIGGEST -->
+            <g class="map-node" data-layer="hyperscale crisis"
+              onclick="mapTip(event,'Loudoun Co., Virginia 🇺🇸','5,427 total US','18 GW','HYPERSCALE CORE','GRID SATURATED')"
+              style="cursor:pointer;">
+              <circle cx="231" cy="160" r="45" fill="url(#rg_g)">
+                <animate attributeName="r" values="35;60;35" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".9;0;.9" dur="3s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="231" cy="160" r="11" fill="#C8A96E" opacity=".95" filter="url(#fgold)" />
+              <circle cx="231" cy="160" r="4.5" fill="#FFF" />
+            </g>
+            <!-- Texas Stargate -->
+            <g class="map-node" data-layer="hyperscale growth" onclick="mapTip(event,'Abilene Texas — STARGATE 🇺🇸','218 facilities','1.2 GW / 450K GPUs','AI MEGA-CAMPUS','EXPANDING')"
+              style="cursor:pointer;">
+              <circle cx="178" cy="184" r="32" fill="url(#rg_g)">
+                <animate attributeName="r" values="24;45;24" dur="3.6s" begin=".4s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".8;0;.8" dur="3.6s" begin=".4s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="178" cy="184" r="9" fill="#C8A96E" opacity=".85" filter="url(#fgold)" />
+              <circle cx="178" cy="184" r="3.5" fill="#FFF" />
+            </g>
+            <!-- California -->
+            <g class="map-node" data-layer="hyperscale" onclick="mapTip(event,'Silicon Valley, CA 🇺🇸','189 facilities','8 GW','TECH LEGACY HUB','CAPACITY TIGHT')"
+              style="cursor:pointer;">
+              <circle cx="124" cy="164" r="25" fill="url(#rg_g)">
+                <animate attributeName="r" values="18;36;18" dur="4.2s" begin=".8s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".7;0;.7" dur="4.2s" begin=".8s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="124" cy="164" r="7.5" fill="#C8A96E" opacity=".8" filter="url(#fgold)" />
+              <circle cx="124" cy="164" r="3" fill="#FFF" />
+            </g>
+            <!-- UK -->
+            <g class="map-node" data-layer="hyperscale" onclick="mapTip(event,'London, United Kingdom 🇬🇧','523 facilities','5.2 GW','EMEA GATEWAY','STABLE')"
+              style="cursor:pointer;">
+              <circle cx="396" cy="72" r="26" fill="url(#rg_c)">
+                <animate attributeName="r" values="20;38;20" dur="3.3s" begin=".6s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".8;0;.8" dur="3.3s" begin=".6s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="396" cy="72" r="8" fill="#00D4FF" opacity=".92" filter="url(#fcyan)" />
+              <circle cx="396" cy="72" r="3.5" fill="#FFF" />
+            </g>
+            <!-- Germany/Frankfurt -->
+            <g class="map-node" data-layer="hyperscale" onclick="mapTip(event,'Frankfurt, Germany 🇩🇪','529 facilities','6.1 GW','EU DIGITAL CORE','GROWING')"
+              style="cursor:pointer;">
+              <circle cx="454" cy="82" r="22" fill="url(#rg_c)">
+                <animate attributeName="r" values="16;34;16" dur="4s" begin="1s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".7;0;.7" dur="4s" begin="1s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="454" cy="82" r="7" fill="#00D4FF" opacity=".85" filter="url(#fcyan)" />
+              <circle cx="454" cy="82" r="3" fill="#FFF" />
+            </g>
+            <!-- Netherlands -->
+            <g class="map-node" data-layer="crisis" onclick="mapTip(event,'Amsterdam, Netherlands 🇳🇱','294 facilities','3.8 GW','INTERNET CORE','POWER SCARCE')"
+              style="cursor:pointer;">
+              <circle cx="431" cy="74" r="18" fill="url(#rg_c)">
+                <animate attributeName="r" values="13;28;13" dur="3.7s" begin=".3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".6;0;.6" dur="3.7s" begin=".3s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="431" cy="74" r="6" fill="#00D4FF" opacity=".75" filter="url(#fcyan)" />
+              <circle cx="431" cy="74" r="2.5" fill="#FFF" />
+            </g>
+            <!-- Ireland (crisis) -->
+            <g class="map-node" data-layer="crisis" onclick="mapTip(event,'Dublin, Ireland 🇮🇪','82 facilities','2.1 GW','EU TAX HUB','GRID + WATER CRISIS')"
+              style="cursor:pointer;">
+              <circle cx="374" cy="68" r="14" fill="url(#rg_r)">
+                <animate attributeName="r" values="10;22;10" dur="3.5s" begin="1.8s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".6;0;.6" dur="3.5s" begin="1.8s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="374" cy="68" r="5" fill="#FF4560" opacity=".8" filter="url(#fred)" />
+              <circle cx="374" cy="68" r="2" fill="#FFF" />
+            </g>
+            <!-- Sweden/Nordics -->
+            <g class="map-node" data-layer="growth" onclick="mapTip(event,'Stockholm, Sweden 🇸🇪','68 facilities','1.8 GW','GREEN ENERGY HUB','IDEAL CONDITIONS')"
+              style="cursor:pointer;">
+              <circle cx="468" cy="52" r="13" fill="url(#rg_gr)">
+                <animate attributeName="r" values="9;20;9" dur="4.5s" begin="2.2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".5;0;.5" dur="4.5s" begin="2.2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="468" cy="52" r="5" fill="#00E396" opacity=".8" />
+              <circle cx="468" cy="52" r="2" fill="#FFF" />
+            </g>
+            <!-- China Inner Mongolia -->
+            <g class="map-node" data-layer="hyperscale crisis" onclick="mapTip(event,'Inner Mongolia, China 🇨🇳','449 facilities','22 GW','SOVEREIGN MEGACLUSTER','STATE-CONTROLLED')"
+              style="cursor:pointer;">
+              <circle cx="714" cy="130" r="34" fill="url(#rg_r)">
+                <animate attributeName="r" values="26;50;26" dur="3.5s" begin=".7s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".8;0;.8" dur="3.5s" begin=".7s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="714" cy="130" r="10" fill="#FF4560" opacity=".94" filter="url(#fred)" />
+              <circle cx="714" cy="130" r="4.5" fill="#FFF" />
+            </g>
+            <!-- India Mumbai -->
+            <g class="map-node" data-layer="growth" onclick="mapTip(event,'Mumbai + Hyderabad 🇮🇳','168 facilities','3.2 GW','FAST EMERGING','15% CAGR')"
+              style="cursor:pointer;">
+              <circle cx="602" cy="184" r="20" fill="url(#rg_c)">
+                <animate attributeName="r" values="14;32;14" dur="4.4s" begin="1.2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".6;0;.6" dur="4.4s" begin="1.2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="602" cy="184" r="7" fill="#00D4FF" opacity=".78" filter="url(#fcyan)" />
+              <circle cx="602" cy="184" r="2.5" fill="#FFF" />
+            </g>
+            <!-- Singapore -->
+            <g class="map-node" data-layer="hyperscale growth" onclick="mapTip(event,'Singapore 🇸🇬','168 facilities','2.1 GW','SEA DIGITAL HUB','MORATORIUM LIFTED')"
+              style="cursor:pointer;">
+              <circle cx="718" cy="218" r="18" fill="url(#rg_p)">
+                <animate attributeName="r" values="13;28;13" dur="4s" begin="1.5s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".7;0;.7" dur="4s" begin="1.5s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="718" cy="218" r="6.5" fill="#A78BFA" opacity=".92" filter="url(#fpur)" />
+              <circle cx="718" cy="218" r="2.5" fill="#FFF" />
+            </g>
+            <!-- Japan -->
+            <g class="map-node" data-layer="hyperscale" onclick="mapTip(event,'Tokyo, Japan 🇯🇵','145 facilities','4.5 GW','APAC ANCHOR','STABLE')"
+              style="cursor:pointer;">
+              <circle cx="802" cy="120" r="17" fill="url(#rg_c)">
+                <animate attributeName="r" values="12;27;12" dur="4.6s" begin=".2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".6;0;.6" dur="4.6s" begin=".2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="802" cy="120" r="6" fill="#00D4FF" opacity=".8" />
+              <circle cx="802" cy="120" r="2.5" fill="#FFF" />
+            </g>
+            <!-- UAE -->
+            <g class="map-node" data-layer="growth" onclick="mapTip(event,'Dubai, UAE 🇦🇪','48 facilities','1.2 GW','MENA RISING','RAPID GROWTH')"
+              style="cursor:pointer;">
+              <circle cx="561" cy="147" r="16" fill="url(#rg_g)">
+                <animate attributeName="r" values="11;25;11" dur="3.8s" begin="2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".7;0;.7" dur="3.8s" begin="2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="561" cy="147" r="6" fill="#C8A96E" opacity=".9" filter="url(#fgold)" />
+              <circle cx="561" cy="147" r="2.5" fill="#FFF" />
+            </g>
+            <!-- Australia -->
+            <g class="map-node" data-layer="growth" onclick="mapTip(event,'Sydney, Australia 🇦🇺','211 facilities','2.8 GW','APAC GROWTH','EXPANDING')"
+              style="cursor:pointer;">
+              <circle cx="771" cy="366" r="17" fill="url(#rg_c)">
+                <animate attributeName="r" values="12;26;12" dur="5s" begin=".9s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".6;0;.6" dur="5s" begin=".9s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="771" cy="366" r="6" fill="#00D4FF" opacity=".72" />
+              <circle cx="771" cy="366" r="2.5" fill="#FFF" />
+            </g>
+            <!-- Brazil -->
+            <g class="map-node" data-layer="growth" onclick="mapTip(event,'São Paulo, Brazil 🇧🇷','112 facilities','1.8 GW','LATAM CORE','GROWING')"
+              style="cursor:pointer;">
+              <circle cx="241" cy="328" r="15" fill="url(#rg_c)">
+                <animate attributeName="r" values="10;23;10" dur="4.1s" begin="1.8s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".6;0;.6" dur="4.1s" begin="1.8s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="241" cy="328" r="5.5" fill="#00D4FF" opacity=".65" />
+              <circle cx="241" cy="328" r="2" fill="#FFF" />
+            </g>
+            <!-- South Africa -->
+            <g class="map-node" data-layer="growth" onclick="mapTip(event,'Johannesburg 🇿🇦','34 facilities','0.4 GW','AFRICA GATEWAY','FRONTIER')"
+              style="cursor:pointer;">
+              <circle cx="442" cy="351" r="12" fill="url(#rg_gr)">
+                <animate attributeName="r" values="8;19;8" dur="5.2s" begin="2.5s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".5;0;.5" dur="5.2s" begin="2.5s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="442" cy="351" r="4.5" fill="#00E396" opacity=".82" />
+              <circle cx="442" cy="351" r="2" fill="#FFF" />
+            </g>
+            <!-- Kenya/Africa emerging -->
+            <g class="map-node" data-layer="growth" onclick="mapTip(event,'Nairobi, Kenya 🇰🇪','12 facilities','0.1 GW','AFRICA FRONTIER','CASSAVA INVEST.')"
+              style="cursor:pointer;">
+              <circle cx="512" cy="265" r="9" fill="url(#rg_gr)">
+                <animate attributeName="r" values="6;15;6" dur="5.5s" begin="3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".5;0;.5" dur="5.5s" begin="3s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="512" cy="265" r="4" fill="#00E396" opacity=".7" />
+              <circle cx="512" cy="265" r="1.5" fill="#FFF" />
+            </g>
+            <!-- Canada -->
+            <g class="map-node" data-layer="hyperscale" onclick="mapTip(event,'Toronto + Vancouver 🇨🇦','338 facilities','4.2 GW','NA OVERFLOW HUB','GROWING FAST')"
+              style="cursor:pointer;">
+              <circle cx="195" cy="130" r="18" fill="url(#rg_g)">
+                <animate attributeName="r" values="13;28;13" dur="4.3s" begin="1.1s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".6;0;.6" dur="4.3s" begin="1.1s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="195" cy="130" r="6.5" fill="#C8A96E" opacity=".75" />
+              <circle cx="195" cy="130" r="2.5" fill="#FFF" />
+            </g>
+
+            <!-- Labels -->
+            <text x="168" y="138" fill="#C8A96E" font-family="JetBrains Mono,monospace" font-size="7.5"
+              letter-spacing="3" opacity=".65">AMERICAS</text>
+            <text x="398" y="51" fill="#00D4FF" font-family="JetBrains Mono,monospace" font-size="7.5"
+              letter-spacing="2" opacity=".6">EUROPE</text>
+            <text x="655" y="108" fill="#00D4FF" font-family="JetBrains Mono,monospace" font-size="7.5"
+              letter-spacing="2" opacity=".6">ASIA-PACIFIC</text>
+            <text x="420" y="128" fill="#8888A8" font-family="JetBrains Mono,monospace" font-size="7"
+              letter-spacing="1.5" opacity=".5">AFRICA</text>
+            <text x="530" y="118" fill="#8888A8" font-family="JetBrains Mono,monospace" font-size="7"
+              letter-spacing="1.5" opacity=".45">MENA</text>
+          </svg>
+          <div class="map-tip" id="mapTip">
+            <div class="mt-name" id="mt-n">Virginia, USA</div>
+            <div class="mt-row"><span class="mt-k">FACILITIES</span><span class="mt-v" id="mt-f"
+                style="color:#C8A96E;">342</span></div>
+            <div class="mt-row"><span class="mt-k">POWER</span><span class="mt-v" id="mt-p" style="color:#00D4FF;">18
+                GW</span></div>
+            <div class="mt-row"><span class="mt-k">TIER</span><span class="mt-v" id="mt-t"
+                style="color:#00E396;">HYPERSCALE HUB</span></div>
+            <div class="mt-row"><span class="mt-k">STATUS</span><span class="mt-v" id="mt-s" style="color:#FFB830;">GRID
+                CONSTRAINED</span></div>
+          </div>
+          <!-- Node Intelligence side panel -->
+          <div class="node-intel-panel" id="nodeIntelPanel">
+            <div class="node-intel-head">
+              <span style="font-family: var(--font-mono); font-size: 10px; color: var(--gold); letter-spacing: .12em;">NODE INTELLIGENCE</span>
+              <button class="node-intel-close" onclick="closeNodePanel()">&times;</button>
+            </div>
+            <div class="node-intel-body">
+              <h3 id="ni-loc" style="font-family: var(--font-serif); font-size: 24px; font-weight: 300; margin-bottom: 12px; color: var(--txt);">Virginia</h3>
+              
+              <div class="ni-divider"></div>
+              
+              <div class="ni-stat">
+                <span class="ni-label">Facility Count</span>
+                <span class="ni-val" id="ni-fac">342 facilities</span>
+              </div>
+              <div class="ni-stat">
+                <span class="ni-label">Power Capacity</span>
+                <span class="ni-val" id="ni-pow">18 GW</span>
+              </div>
+              <div class="ni-stat">
+                <span class="ni-label">Status</span>
+                <span class="ni-val" id="ni-status">GRID CONSTRAINED</span>
+              </div>
+              <div class="ni-stat">
+                <span class="ni-label">Risk Level</span>
+                <span class="ni-val" id="ni-risk">Critical</span>
+              </div>
+              
+              <div class="ni-divider"></div>
+              
+              <div class="ni-section">
+                <span class="ni-label">Strategic Summary</span>
+                <p class="ni-desc" id="ni-summary">Primary hyperscaler gateway for NA traffic. Grid limits and zoning bottlenecks causing massive delay backlog.</p>
+              </div>
+              
+              <div class="ni-section">
+                <span class="ni-label">Infrastructure Load</span>
+                <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                  <span class="ni-sub-label">Grid Pressure</span>
+                  <span class="ni-sub-val" id="ni-grid">92%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span class="ni-sub-label">Water Pressure</span>
+                  <span class="ni-sub-val" id="ni-water">High</span>
+                </div>
+              </div>
+              
+              <div class="ni-section">
+                <span class="ni-label">Major Operators</span>
+                <span class="ni-val" id="ni-operators">AWS, Microsoft, Google</span>
+              </div>
+              
+              <div class="ni-section">
+                <span class="ni-label">Growth Outlook</span>
+                <span class="ni-val" id="ni-growth" style="color: var(--cyan);">Expanding (Staged)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="map-stats-bar">
+          <div class="msb-item">
+            <div class="msb-val" id="msbActiveNodes">18</div>
+            <div class="msb-lab">Active Nodes</div>
+          </div>
+          <div class="msb-item">
+            <div class="msb-val">170+</div>
+            <div class="msb-lab">Countries</div>
+          </div>
+          <div class="msb-item">
+            <div class="msb-val">8,947</div>
+            <div class="msb-lab">Total Facilities</div>
+          </div>
+          <div class="msb-item">
+            <div class="msb-val" id="msbActiveCapacity">122.2 GW</div>
+            <div class="msb-lab">Active Capacity</div>
+          </div>
+          <div class="msb-item">
+            <div class="msb-val" id="msbActiveHyperscale">1,297</div>
+            <div class="msb-lab">Hyperscale Active</div>
+          </div>
+          <div class="msb-item">
+            <div class="msb-val">770</div>
+            <div class="msb-lab">In Pipeline</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rankings -->
+      <div style="margin-top:24px;" class="rank-grid">
+        <div class="rank-table">
+          <div class="rt-head">
+            <div class="rt-title">
+              <div class="chart-dot" style="background:#C8A96E;"></div>Top Nations · Facility Count
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.3s">
+            <div class="rt-rank">01</div>
+            <div class="rt-flag">🇺🇸</div>
+            <div class="rt-name">United States</div>
+            <div class="rt-val" style="color:#C8A96E;">5,427</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:100%"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.35s">
+            <div class="rt-rank">02</div>
+            <div class="rt-flag">🇩🇪</div>
+            <div class="rt-name">Germany</div>
+            <div class="rt-val" style="color:#00D4FF;">529</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:9.7%"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.40s">
+            <div class="rt-rank">03</div>
+            <div class="rt-flag">🇬🇧</div>
+            <div class="rt-name">United Kingdom</div>
+            <div class="rt-val" style="color:#00D4FF;">523</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:9.6%"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.45s">
+            <div class="rt-rank">04</div>
+            <div class="rt-flag">🇨🇳</div>
+            <div class="rt-name">China</div>
+            <div class="rt-val" style="color:#FF4560;">449</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:8.3%"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.50s">
+            <div class="rt-rank">05</div>
+            <div class="rt-flag">🇨🇦</div>
+            <div class="rt-name">Canada</div>
+            <div class="rt-val" style="color:#C8A96E;">338</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:6.2%"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.55s">
+            <div class="rt-rank">06</div>
+            <div class="rt-flag">🇳🇱</div>
+            <div class="rt-name">Netherlands</div>
+            <div class="rt-val" style="color:#00D4FF;">294</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:5.4%"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.60s">
+            <div class="rt-rank">07</div>
+            <div class="rt-flag">🇦🇺</div>
+            <div class="rt-name">Australia</div>
+            <div class="rt-val" style="color:#00D4FF;">211</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:3.9%"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.65s">
+            <div class="rt-rank">08</div>
+            <div class="rt-flag">🇫🇷</div>
+            <div class="rt-name">France</div>
+            <div class="rt-val" style="color:#00D4FF;">198</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:3.6%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="rank-table">
+          <div class="rt-head">
+            <div class="rt-title">
+              <div class="chart-dot" style="background:#A78BFA;"></div>CAGR Growth Leaders 2025–2030
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.3s">
+            <div class="rt-rank">01</div>
+            <div class="rt-flag">🇺🇸</div>
+            <div class="rt-name">Americas (US-led)</div>
+            <div class="rt-val" style="color:#C8A96E;">17%</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:100%"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.35s">
+            <div class="rt-rank">02</div>
+            <div class="rt-flag">🌏</div>
+            <div class="rt-name">Southeast Asia</div>
+            <div class="rt-val" style="color:#A78BFA;">16%</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:94%;background:linear-gradient(90deg,#A78BFA,#7B59D4)"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.40s">
+            <div class="rt-rank">03</div>
+            <div class="rt-flag">🇮🇳</div>
+            <div class="rt-name">India</div>
+            <div class="rt-val" style="color:#00D4FF;">15%</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:88%"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.45s">
+            <div class="rt-rank">04</div>
+            <div class="rt-flag">🌍</div>
+            <div class="rt-name">Africa (emerging)</div>
+            <div class="rt-val" style="color:#00E396;">14%</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:82%;background:linear-gradient(90deg,#00E396,#006840)"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.50s">
+            <div class="rt-rank">05</div>
+            <div class="rt-flag">🇪🇺</div>
+            <div class="rt-name">Europe</div>
+            <div class="rt-val" style="color:#FFB830;">12%</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:70%;background:linear-gradient(90deg,#FFB830,#804800)"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.55s">
+            <div class="rt-rank">06</div>
+            <div class="rt-flag">🇨🇳</div>
+            <div class="rt-name">China</div>
+            <div class="rt-val" style="color:#FF4560;">11%</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:64%;background:linear-gradient(90deg,#FF4560,#901020)"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.60s">
+            <div class="rt-rank">07</div>
+            <div class="rt-flag">🇦🇪</div>
+            <div class="rt-name">MENA / UAE</div>
+            <div class="rt-val" style="color:#C8A96E;">18%</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:100%"></div>
+            </div>
+          </div>
+          <div class="rt-row" style="animation-delay:.65s">
+            <div class="rt-rank">08</div>
+            <div class="rt-flag">🌎</div>
+            <div class="rt-name">Latin America</div>
+            <div class="rt-val" style="color:#00D4FF;">13%</div>
+            <div class="rt-bar-wrap">
+              <div class="rt-bar" style="width:76%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════ WAR ROOM ══════════════════════════════ -->
+    <section id="warroom">
+      <div class="sec-head">
+        <div class="sec-label">HYPERSCALER WAR ROOM</div>
+        <h2 class="sec-title">The Companies <em>Building the Future.</em></h2>
+        <p class="sec-sub">Four companies are spending $650 billion in 2026 alone. Here is what they are building, where
+          they are going, and what is stopping them.</p>
+      </div>
+      <div class="war-room">
+        <div class="company-card">
+          <div class="cc-head">
+            <div class="cc-logo">
+              <div class="cc-icon" style="background:rgba(0,120,212,0.1);">🪟</div>
+              <div>
+                <div class="cc-name">Microsoft</div>
+                <div class="cc-sub">AZURE · AI WAN · FAIRWATER</div>
+              </div>
+            </div>
+            <div class="cc-capex" style="color:#00D4FF;">$80B <span
+                style="font-size:12px;color:var(--txt3);">2026</span></div>
+          </div>
+          <div class="cc-body">
+            <div class="cc-stat">
+              <div class="cc-stat-lab">KEY PROJECT</div>
+              <div class="cc-stat-val" style="color:#00D4FF;">Fairwater AI Campus</div>
+            </div>
+            <div class="cc-stat">
+              <div class="cc-stat-lab">INNOVATION</div>
+              <div class="cc-stat-val" style="color:#00E396;">Zero-water cooling</div>
+            </div>
+            <div class="cc-stat">
+              <div class="cc-stat-lab">AI NETWORK</div>
+              <div class="cc-stat-val" style="color:#C8A96E;">120K mi fiber WAN</div>
+            </div>
+            <div class="cc-stat">
+              <div class="cc-stat-lab">UAE COMMIT</div>
+              <div class="cc-stat-val" style="color:#A78BFA;">$15.2B</div>
+            </div>
+          </div>
+          <div class="cc-news"><span class="cc-news-tag tag-v">VERIFIED</span>
+            <div class="cc-news-txt">Fairwater Atlanta operational Oct 2025. Wisconsin online 2026. Closed-loop liquid
+              cooling = zero operational water consumption. Deploying custom Azure Maia 100 AI chips across footprint.
+            </div>
+          </div>
+        </div>
+        <div class="company-card">
+          <div class="cc-head">
+            <div class="cc-logo">
+              <div class="cc-icon" style="background:rgba(255,153,0,0.1);">☁️</div>
+              <div>
+                <div class="cc-name">Amazon / AWS</div>
+                <div class="cc-sub">HYPERSCALE LEADER</div>
+              </div>
+            </div>
+            <div class="cc-capex" style="color:#FFB830;">$105B <span
+                style="font-size:12px;color:var(--txt3);">2026</span></div>
+          </div>
+          <div class="cc-body">
+            <div class="cc-stat">
+              <div class="cc-stat-lab">GLOBAL REGIONS</div>
+              <div class="cc-stat-val" style="color:#FFB830;">34 regions</div>
+            </div>
+            <div class="cc-stat">
+              <div class="cc-stat-lab">HYPERSCALE %</div>
+              <div class="cc-stat-val" style="color:#C8A96E;">Largest operator</div>
+            </div>
+            <div class="cc-stat">
+              <div class="cc-stat-lab">NEAR-SATURATION</div>
+              <div class="cc-stat-val" style="color:#FF4560;">N. Virginia, PJM</div>
+            </div>
+            <div class="cc-stat">
+              <div class="cc-stat-lab">STRATEGY</div>
+              <div class="cc-stat-val" style="color:#00E396;">Nuclear PPAs</div>
+            </div>
+          </div>
+          <div class="cc-news"><span class="cc-news-tag tag-c">CONTESTED</span>
+            <div class="cc-news-txt">AWS near-saturation in key US grid regions. PJM cleared $15B auction. Amazon among
+              biggest corporate renewable energy buyers globally — 43% of all clean energy PPAs in 2024.</div>
+          </div>
+        </div>
+        <div class="company-card">
+          <div class="cc-head">
+            <div class="cc-logo">
+              <div class="cc-icon" style="background:rgba(66,133,244,0.1);">🔵</div>
+              <div>
+                <div class="cc-name">Google / Alphabet</div>
+                <div class="cc-sub">GCP · 42 REGIONS</div>
+              </div>
+            </div>
+            <div class="cc-capex" style="color:#00E396;">$75B <span
+                style="font-size:12px;color:var(--txt3);">2026</span></div>
+          </div>
+          <div class="cc-body">
+            <div class="cc-stat">
+              <div class="cc-stat-lab">CLOUD REGIONS</div>
+              <div class="cc-stat-val" style="color:#00E396;">42 regions, 127 AZs</div>
+            </div>
+            <div class="cc-stat">
+              <div class="cc-stat-lab">WATER USE 2024</div>
+              <div class="cc-stat-val" style="color:#FF4560;">6.1 Bn gallons</div>
+            </div>
+            <div class="cc-stat">
+              <div class="cc-stat-lab">PUE</div>
+              <div class="cc-stat-val" style="color:#00D4FF;">1.10 fleet avg</div>
+            </div>
+            <div class="cc-stat">
+              <div class="cc-stat-lab">24/7 CFE</div>
+              <div class="cc-stat-val" style="color:#00E396;">64% globally</div>
+            </div>
+          </div>
+          <div class="cc-news"><span class="cc-news-tag tag-r">CRISIS</span>
+            <div class="cc-news-txt">Canceled Indianapolis campus after Sept 2025 city-council opposition. New regions:
+              Sweden, South Africa, Mexico in 2025. Withdrawal: 7.8 billion gallons of water in 2024 alone.</div>
+          </div>
+        </div>
+        <div class="company-card">
+          <div class="cc-head">
+            <div class="cc-logo">
+              <div class="cc-icon" style="background:rgba(24,119,242,0.1);">🔷</div>
+              <div>
+                <div class="cc-name">Meta</div>
+                <div class="cc-sub">AI INFRA · LLAMA · BYOG</div>
+              </div>
+            </div>
+            <div class="cc-capex" style="color:#A78BFA;">$65B <span
+                style="font-size:12px;color:var(--txt3);">2026</span></div>
+          </div>
+          <div class="cc-body">
+            <div class="cc-stat">
+              <div class="cc-stat-lab">STRATEGY</div>
+              <div class="cc-stat-val" style="color:#A78BFA;">Bring Your Own Gen.</div>
+            </div>
+            <div class="cc-stat">
+              <div class="cc-stat-lab">FUEL</div>
+              <div class="cc-stat-val" style="color:#FF4560;">On-site gas turbines</div>
+            </div>
+            <div class="cc-stat">
+              <div class="cc-stat-lab">LLAMA INFRA</div>
+              <div class="cc-stat-val" style="color:#C8A96E;">AI-first buildout</div>
+            </div>
+            <div class="cc-stat">
+              <div class="cc-stat-lab">CLEAN ENERGY</div>
+              <div class="cc-stat-val" style="color:#00E396;">43% PPAs 2024</div>
+            </div>
+          </div>
+          <div class="cc-news"><span class="cc-news-tag tag-c">CONTESTED</span>
+            <div class="cc-news-txt">BYOG model bypasses congested grid via direct gas generation. Memphis xAI (Elon's
+              company) faced identical community opposition over methane turbines. Meta navigating same backlash.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MARKET SHARE -->
+      <div class="chart-card" style="margin-bottom:20px;">
+        <div class="chart-head">
+          <div class="chart-title">
+            <div class="chart-dot" style="background:#C8A96E;"></div>Hyperscaler Market Share of Global Data Center
+            Capacity
+          </div>
+        </div>
+        <div class="market-bars">
+          <div class="mb-row">
+            <div class="mb-name">🪟 Microsoft</div>
+            <div class="mb-track">
+              <div class="mb-fill" style="background:linear-gradient(90deg,#00D4FF,#0080A8);" data-w=".22"></div>
+            </div>
+            <div class="mb-pct" style="color:#00D4FF;">22%</div>
+          </div>
+          <div class="mb-row">
+            <div class="mb-name">☁️ Amazon AWS</div>
+            <div class="mb-track">
+              <div class="mb-fill" style="background:linear-gradient(90deg,#FFB830,#804800);" data-w=".31"></div>
+            </div>
+            <div class="mb-pct" style="color:#FFB830;">31%</div>
+          </div>
+          <div class="mb-row">
+            <div class="mb-name">🔵 Google</div>
+            <div class="mb-track">
+              <div class="mb-fill" style="background:linear-gradient(90deg,#00E396,#006840);" data-w=".12"></div>
+            </div>
+            <div class="mb-pct" style="color:#00E396;">12%</div>
+          </div>
+          <div class="mb-row">
+            <div class="mb-name">🔷 Meta</div>
+            <div class="mb-track">
+              <div class="mb-fill" style="background:linear-gradient(90deg,#A78BFA,#5B39C8);" data-w=".07"></div>
+            </div>
+            <div class="mb-pct" style="color:#A78BFA;">7%</div>
+          </div>
+          <div class="mb-row">
+            <div class="mb-name">🟠 Oracle</div>
+            <div class="mb-track">
+              <div class="mb-fill" style="background:linear-gradient(90deg,#FF4560,#900020);" data-w=".05"></div>
+            </div>
+            <div class="mb-pct" style="color:#FF4560;">5%</div>
+          </div>
+          <div class="mb-row">
+            <div class="mb-name">🟡 Alibaba</div>
+            <div class="mb-track">
+              <div class="mb-fill" style="background:linear-gradient(90deg,#C8A96E,#705020);" data-w=".08"></div>
+            </div>
+            <div class="mb-pct" style="color:#C8A96E;">8%</div>
+          </div>
+          <div class="mb-row">
+            <div class="mb-name">⬜ Colocation + Other</div>
+            <div class="mb-track">
+              <div class="mb-fill" style="background:linear-gradient(90deg,#8888A8,#444460);" data-w=".15"></div>
+            </div>
+            <div class="mb-pct" style="color:#8888A8;">15%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEWS -->
+      <div class="news-grid">
+        <div class="news-card">
+          <div class="rt-head">
+            <div class="rt-title">
+              <div class="chart-dot"
+                style="background:#FF4560;animation:lpulse 1.6s ease infinite;box-shadow:0 0 5px #FF4560;"></div>Crisis
+              Intelligence Feed
+            </div>
+            <div class="live-badge" style="font-size:8px;padding:3px 9px;">
+              <div class="live-badge-dot"></div>HOT
+            </div>
+          </div>
+          <div class="news-item">
+            <div class="ntag r">⚠ UN CRITICAL</div>
+            <div class="nhead">AI data centers: 9.3 trillion liters water by 2030 — 1.3B people's annual needs (UN
+              University, June 2026)</div>
+            <div class="nsrc">UN UNIVERSITY · 3 JUNE 2026</div>
+          </div>
+          <div class="news-item">
+            <div class="ntag r">🔥 POWER CRISIS</div>
+            <div class="nhead">50% of all 2026 data center projects face delays from power shortfalls — Sightline
+              Climate Feb 2026</div>
+            <div class="nsrc">SIGHTLINE CLIMATE · FEB 2026</div>
+          </div>
+          <div class="news-item">
+            <div class="ntag c">⚡ CONTESTED</div>
+            <div class="nhead">Morgan Stanley: 49 GW US power shortfall by 2028. Grid responds in 4–10 years, capex
+              deploys in 12–24 months.</div>
+            <div class="nsrc">MORGAN STANLEY · Q1 2026</div>
+          </div>
+          <div class="news-item">
+            <div class="ntag r">💀 CRISIS</div>
+            <div class="nhead">$40M transformer order can idle a $2B campus — less than 10% of costs hold 90% of
+              projects hostage</div>
+            <div class="nsrc">TECH INSIDER · MAY 2026</div>
+          </div>
+          <div class="news-item">
+            <div class="ntag p">☢ NUCLEAR</div>
+            <div class="nhead">Three Mile Island restart planned 2028. Microsoft signed PPA. "Bring Your Own Generation"
+              becomes industry norm</div>
+            <div class="nsrc">DATACENTERKNOWLEDGE · 2026</div>
+          </div>
+        </div>
+        <div class="news-card">
+          <div class="rt-head">
+            <div class="rt-title">
+              <div class="chart-dot"
+                style="background:#00E396;animation:lpulse 2s ease infinite;box-shadow:0 0 5px #00E396;"></div>Verified
+              Developments
+            </div>
+            <div class="live-badge" style="font-size:8px;padding:3px 9px;">
+              <div class="live-badge-dot"></div>LIVE
+            </div>
+          </div>
+          <div class="news-item">
+            <div class="ntag v">✓ VERIFIED</div>
+            <div class="nhead">Stargate Texas: first 2 buildings operational Sep 2025, 1.2 GW, 450K NVIDIA GB200 GPUs. 6
+              more buildings by mid-2026.</div>
+            <div class="nsrc">BLOOMBERG · MAY 2026</div>
+          </div>
+          <div class="news-item">
+            <div class="ntag v">✓ VERIFIED</div>
+            <div class="nhead">Global hyperscale count: 1,297 operational — nearly triple from 2018. 770 more in
+              pipeline globally.</div>
+            <div class="nsrc">SYNERGY RESEARCH · 2026</div>
+          </div>
+          <div class="news-item">
+            <div class="ntag v">✓ VERIFIED</div>
+            <div class="nhead">Global capacity to double 2025–2030: 97 GW new capacity, total reaching 200 GW — JLL
+              Global Outlook 2026</div>
+            <div class="nsrc">JLL · 2026</div>
+          </div>
+          <div class="news-item">
+            <div class="ntag c">CONTESTED</div>
+            <div class="nhead">Memphis residents file EPA complaint over xAI methane turbines. Indianapolis Google
+              project canceled after council vote.</div>
+            <div class="nsrc">CONSUMER REPORTS · MAR 2026</div>
+          </div>
+          <div class="news-item">
+            <div class="ntag v">✓ VERIFIED</div>
+            <div class="nhead">NVIDIA Rubin R100 GPU: 2,300W TDP, nearly double Blackwell. Rack densities now exceed 120
+              kW per rack.</div>
+            <div class="nsrc">DATACENTER POWER CRISIS · 2026</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════ ENERGY ══════════════════════════════ -->
+    <section id="energy">
+      <div class="sec-head">
+        <div class="sec-label">ENERGY & NUCLEAR REVIVAL</div>
+        <h2 class="sec-title">They're Restarting <em>Nuclear Reactors.</em></h2>
+        <p class="sec-sub">The public grid can't keep up. Transformers are backordered 4 years. So hyperscalers are
+          going "behind the meter" — buying nuclear plants, building gas turbines on-site, and quietly becoming the
+          world's largest private power utilities.</p>
+      </div>
+      <div class="energy-grid">
+        <div class="energy-card">
+          <div class="chart-head">
+            <div class="chart-title">
+              <div class="chart-dot" style="background:#FFB830;"></div>Nuclear & Power Revival Projects
+            </div>
+          </div>
+          <div class="nuclear-list">
+            <div class="nuke-item">
+              <div class="nuke-icon">☢️</div>
+              <div>
+                <div class="nuke-name">Three Mile Island — Pennsylvania</div>
+                <div class="nuke-detail">Microsoft signed PPA · Restart planned 2028 · "Constellation Energy"</div>
+              </div>
+              <div class="nuke-badge"
+                style="background:rgba(255,184,48,.1);color:#FFB830;border:1px solid rgba(255,184,48,.2);">2028 RESTART
+              </div>
+            </div>
+            <div class="nuke-item">
+              <div class="nuke-icon">⚡</div>
+              <div>
+                <div class="nuke-name">Stargate On-Site Gas — Abilene TX</div>
+                <div class="nuke-detail">OpenAI + Oracle · Behind-meter generation · Bypasses PJM grid</div>
+              </div>
+              <div class="nuke-badge"
+                style="background:rgba(0,227,150,.1);color:#00E396;border:1px solid rgba(0,227,150,.2);">ACTIVE 2025
+              </div>
+            </div>
+            <div class="nuke-item">
+              <div class="nuke-icon">🌊</div>
+              <div>
+                <div class="nuke-name">Microsoft Fairwater — Atlanta + Wisconsin</div>
+                <div class="nuke-detail">Closed-loop liquid cooling · Zero operational water · Paradigm shift</div>
+              </div>
+              <div class="nuke-badge"
+                style="background:rgba(0,212,255,.1);color:#00D4FF;border:1px solid rgba(0,212,255,.2);">ONLINE</div>
+            </div>
+            <div class="nuke-item">
+              <div class="nuke-icon">🌬️</div>
+              <div>
+                <div class="nuke-name">Nordic Green Corridor — Sweden/Norway</div>
+                <div class="nuke-detail">Abundant hydro + wind · Cool climate · Zero water stress · 100% renewable</div>
+              </div>
+              <div class="nuke-badge"
+                style="background:rgba(0,227,150,.1);color:#00E396;border:1px solid rgba(0,227,150,.2);">IDEAL</div>
+            </div>
+            <div class="nuke-item">
+              <div class="nuke-icon">☢️</div>
+              <div>
+                <div class="nuke-name">Amazon Nuclear PPA Portfolio</div>
+                <div class="nuke-detail">Dominion Energy, Talen Energy · Multiple US reactors · Long-term contracts
+                </div>
+              </div>
+              <div class="nuke-badge"
+                style="background:rgba(255,184,48,.1);color:#FFB830;border:1px solid rgba(255,184,48,.2);">EXPANDING
+              </div>
+            </div>
+            <div class="nuke-item">
+              <div class="nuke-icon">🏭</div>
+              <div>
+                <div class="nuke-name">xAI Memphis — Gas Turbines</div>
+                <div class="nuke-detail">Community opposition · EPA complaint filed · Methane turbines controversy</div>
+              </div>
+              <div class="nuke-badge"
+                style="background:rgba(255,69,96,.1);color:#FF4560;border:1px solid rgba(255,69,96,.2);">CONTESTED</div>
+            </div>
+          </div>
+        </div>
+        <div class="energy-card">
+          <div class="chart-head">
+            <div class="chart-title">
+              <div class="chart-dot" style="background:#00E396;"></div>Power Source Mix — Hyperscalers 2026
+            </div>
+          </div>
+          <div class="power-sources">
+            <div class="ps-row">
+              <div class="ps-icon">☀️</div>
+              <div class="ps-name">Solar PPA</div>
+              <div class="ps-track">
+                <div class="ps-fill" style="background:linear-gradient(90deg,#FFB830,#FF6800);" data-pw=".34"></div>
+              </div>
+              <div class="ps-pct" style="color:#FFB830;">34%</div>
+            </div>
+            <div class="ps-row">
+              <div class="ps-icon">🌬️</div>
+              <div class="ps-name">Wind</div>
+              <div class="ps-track">
+                <div class="ps-fill" style="background:linear-gradient(90deg,#00D4FF,#0060A0);" data-pw=".28"></div>
+              </div>
+              <div class="ps-pct" style="color:#00D4FF;">28%</div>
+            </div>
+            <div class="ps-row">
+              <div class="ps-icon">🔌</div>
+              <div class="ps-name">Grid (mixed)</div>
+              <div class="ps-track">
+                <div class="ps-fill" style="background:linear-gradient(90deg,#8888A8,#444460);" data-pw=".22"></div>
+              </div>
+              <div class="ps-pct" style="color:#8888A8;">22%</div>
+            </div>
+            <div class="ps-row">
+              <div class="ps-icon">☢️</div>
+              <div class="ps-name">Nuclear</div>
+              <div class="ps-track">
+                <div class="ps-fill" style="background:linear-gradient(90deg,#A78BFA,#5B39C8);" data-pw=".10"></div>
+              </div>
+              <div class="ps-pct" style="color:#A78BFA;">10%</div>
+            </div>
+            <div class="ps-row">
+              <div class="ps-icon">🏭</div>
+              <div class="ps-name">On-site Gas</div>
+              <div class="ps-track">
+                <div class="ps-fill" style="background:linear-gradient(90deg,#FF4560,#900020);" data-pw=".06"></div>
+              </div>
+              <div class="ps-pct" style="color:#FF4560;">6%</div>
+            </div>
+          </div>
+          <div style="padding:0 20px 16px;">
+            <canvas id="energyTrendChart" height="140"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Geopolitical -->
+      <div class="sec-head" style="margin-top:40px;margin-bottom:24px;">
+        <div class="sec-label">GEOPOLITICAL FLASH POINTS</div>
+        <h2 class="sec-title" style="font-size:clamp(24px,3vw,40px);">Where <em>Data Is Political.</em></h2>
+      </div>
+      <div class="geo-grid">
+        <div class="geo-card">
+          <div class="geo-flag">🇺🇸</div>
+          <div class="geo-country">United States — Virginia</div>
+          <div class="geo-status"
+            style="background:rgba(255,184,48,.1);color:#FFB830;border:1px solid rgba(255,184,48,.2);">GRID CRISIS</div>
+          <div class="geo-detail">Loudoun County: 342 facilities, 18 GW. PJM grid near saturation. 4–8 years for new
+            transmission. Moratorium debates intensifying. Outages increasingly common.</div>
+        </div>
+        <div class="geo-card">
+          <div class="geo-flag">🇺🇸</div>
+          <div class="geo-country">Memphis, Tennessee</div>
+          <div class="geo-status"
+            style="background:rgba(255,69,96,.1);color:#FF4560;border:1px solid rgba(255,69,96,.2);">COMMUNITY WAR</div>
+          <div class="geo-detail">xAI (Elon Musk) running methane gas turbines. EPA complaint filed by residents. Air
+            quality concerns. Model for BYOG backlash spreading nationally.</div>
+        </div>
+        <div class="geo-card">
+          <div class="geo-flag">🇮🇪</div>
+          <div class="geo-country">Dublin, Ireland</div>
+          <div class="geo-status"
+            style="background:rgba(255,69,96,.1);color:#FF4560;border:1px solid rgba(255,69,96,.2);">RESTRICTIONS</div>
+          <div class="geo-detail">Data centers consume 21%+ of Ireland's electricity. Planning restrictions introduced.
+            Grid authority raising alarms. Water stress around Dublin data center cluster.</div>
+        </div>
+        <div class="geo-card">
+          <div class="geo-flag">🇳🇱</div>
+          <div class="geo-country">Amsterdam, Netherlands</div>
+          <div class="geo-status"
+            style="background:rgba(255,184,48,.1);color:#FFB830;border:1px solid rgba(255,184,48,.2);">POWER SCARCE
+          </div>
+          <div class="geo-detail">AMS-IX internet exchange hub. Power scarcity forcing colocation providers to turn away
+            new customers. Government cap on new facilities in Amsterdam metro area.</div>
+        </div>
+        <div class="geo-card">
+          <div class="geo-flag">🇨🇳</div>
+          <div class="geo-country">China — Inner Mongolia</div>
+          <div class="geo-status"
+            style="background:rgba(255,69,96,.1);color:#FF4560;border:1px solid rgba(255,69,96,.2);">STATE CONTROL</div>
+          <div class="geo-detail">Eastern Data, Western Computing national strategy. World's largest DC: 10M sq ft,
+            China Telecom. Sovereign AI compute entirely separate from Western hyperscalers.</div>
+        </div>
+        <div class="geo-card">
+          <div class="geo-flag">🇦🇪</div>
+          <div class="geo-country">Dubai, UAE</div>
+          <div class="geo-status"
+            style="background:rgba(0,227,150,.1);color:#00E396;border:1px solid rgba(0,227,150,.2);">RISING FAST</div>
+          <div class="geo-detail">48 facilities, 1.2 GW. Power-rich — abundant generation unlike constrained US regions.
+            Microsoft committed $15.2B. MENA hub strategy paying dividends.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════ AI ENGINE ══════════════════════════════ -->
+    <section id="intel" class="compact">
+      <div class="sec-head">
+        <div class="sec-label">NEXUS INTELLIGENCE ENGINE</div>
+        <h2 class="sec-title">Ask the <em>Planet Anything.</em></h2>
+        <p class="sec-sub">NEXUS has absorbed every data point on this dashboard. Ask it about the geopolitics, the
+          water crisis, the nuclear revival, Stargate, why Dubai is winning, or what a single ChatGPT query costs the
+          planet.</p>
+      </div>
+      <div class="ai-wrapper">
+        <div class="ai-head">
+          <div class="ai-head-l">
+            <div class="ai-orb">🧠</div>
+            <div>
+              <div class="ai-title">NEXUS Intelligence Engine</div>
+              <div class="ai-subtitle">// Powered by NEXUS AI · Planetary Data Center Analyst · All 2026 data loaded
+              </div>
+            </div>
+          </div>
+          <div class="live-badge">
+            <div class="live-badge-dot"></div>NEXUS ONLINE
+          </div>
+        </div>
+        <div class="ai-chat">
+          <div class="ai-msgs" id="aiMsgs">
+            <div class="amsg bot">
+              🌍 Welcome to <strong>NEXUS</strong> — I have real-time intelligence on <strong>8,947 data
+                centers</strong> across 170+ countries, every crisis, every hyperscaler move, every nuclear deal, and
+              the environmental reckoning the world is only beginning to understand. <br><br>
+              I'm built for Coach Kay's AI Business Accelerator students — the next generation who need to understand
+              what's really at stake. Ask me anything about the planet's most consequential infrastructure.
+            </div>
+          </div>
+          <div class="typing-wrap" id="typingWrap">
+            <div class="td"></div>
+            <div class="td"></div>
+            <div class="td"></div>
+            <span class="typing-lab">NEXUS processing planetary intelligence...</span>
+          </div>
+          <div class="ai-input-row">
+            <input class="ai-in" id="aiIn"
+              placeholder="Ask: What is Stargate? Why is Virginia the data center capital? What does AI do to water supplies?"
+              onkeydown="if(event.key==='Enter')sendMsg()" />
+            <button class="ai-send" onclick="sendMsg()">ASK NEXUS →</button>
+          </div>
+          <div class="ai-suggestions">
+            <div class="ai-sug" onclick="quickAsk('Why are they restarting nuclear reactors for data centers?')">☢
+              Nuclear revival</div>
+            <div class="ai-sug" onclick="quickAsk('What is Stargate and how big is it really?')">🚀 What is Stargate?
+            </div>
+            <div class="ai-sug" onclick="quickAsk('How much water does a single ChatGPT query use?')">💧 ChatGPT water
+              cost</div>
+            <div class="ai-sug" onclick="quickAsk('Why is Virginia the data center capital of the world?')">🗺 Why
+              Virginia?</div>
+            <div class="ai-sug"
+              onclick="quickAsk('What is happening in Memphis with xAI and the community opposition?')">⚡ Memphis crisis
+            </div>
+            <div class="ai-sug" onclick="quickAsk('Why is Dubai becoming a major data center hub?')">🇦🇪 Dubai
+              advantage</div>
+            <div class="ai-sug"
+              onclick="quickAsk('What does the 9.3 trillion liters water figure from the UN actually mean?')">🌊 UN
+              water report</div>
+            <div class="ai-sug"
+              onclick="quickAsk('What happens if the power grid cannot keep up with AI data center demand?')">⚠ Grid
+              cliff 2028</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="ft-l">
+        NEXUS ULTIMATE v4.0 · June 14, 2026 · Dubai, UAE<br>
+        Sources: UN University (Jun 2026) · JLL Global DC Outlook 2026 · IEA · Synergy Research · CBRE · McKinsey ·
+        Brookings · Tech Insider · Morgan Stanley · Sightline Climate · DatacenterKnowledge · Consumer Reports
+      </div>
+      <div class="ft-r">
+        <div class="ft-r-title">For Coach Kay</div>
+        <div class="ft-r-sub">AI BUSINESS ACCELERATOR · COLUMBUS, OHIO<br>Built with 💛 by El Mehdi · Mansas Mogules
+          LLC-FZ · Dubai</div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ══════════════════════════════ SCRIPTS ══════════════════════════════ -->
+  <script>
+    // ── CURSOR
+    const cur = document.getElementById('cursor');
+    const curR = document.getElementById('cursor-ring');
+    document.addEventListener('mousemove', e => {
+      cur.style.left = e.clientX + 'px'; cur.style.top = e.clientY + 'px';
+      curR.style.left = e.clientX + 'px'; curR.style.top = e.clientY + 'px';
+    });
+    document.querySelectorAll('a,button,.nav-link,.mf-btn,.ai-sug,.nuke-item,.geo-card,.company-card,.rt-row,.ct-item').forEach(el => {
+      el.addEventListener('mouseenter', () => { cur.style.width = '16px'; cur.style.height = '16px'; curR.style.width = '48px'; curR.style.height = '48px'; });
+      el.addEventListener('mouseleave', () => { cur.style.width = '10px'; cur.style.height = '10px'; curR.style.width = '36px'; curR.style.height = '36px'; });
+    });
+
+    // ── CLOCK
+    function updateClock() {
+      const now = new Date();
+      const t = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Dubai', hour12: false });
+      document.getElementById('clock').textContent = t;
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    // ── BG PARTICLES
+    const bgC = document.getElementById('bgCanvas');
+    const bgX = bgC.getContext('2d');
+    let bW, bH, pts = [], streams = [];
+    function bgResize() { bW = bgC.width = window.innerWidth; bH = bgC.height = window.innerHeight; }
+    bgResize(); window.addEventListener('resize', bgResize);
+    for (let i = 0; i < 140; i++) pts.push({ x: Math.random() * bW, y: Math.random() * bH, vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25, r: Math.random() * 1.4 + .3, a: Math.random() * .35 + .04, c: Math.random() > .55 ? [200, 169, 110] : Math.random() > .45 ? [0, 212, 255] : [255, 255, 255] });
+    for (let i = 0; i < 12; i++) streams.push({ x: Math.random() * bW, y: -30, spd: Math.random() * 2 + .8, len: Math.random() * 90 + 40, a: Math.random() * .12 + .04, c: Math.random() > .5 ? '200,169,110' : '0,212,255', w: Math.random() * 1.2 + .4 });
+    function bgAnim() {
+      bgX.clearRect(0, 0, bW, bH);
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y, d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 110) { bgX.beginPath(); bgX.strokeStyle = `rgba(200,169,110,${.055 * (1 - d / 110)})`; bgX.lineWidth = .35; bgX.moveTo(pts[i].x, pts[i].y); bgX.lineTo(pts[j].x, pts[j].y); bgX.stroke(); }
+        }
+      }
+      pts.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = bW; if (p.x > bW) p.x = 0; if (p.y < 0) p.y = bH; if (p.y > bH) p.y = 0;
+        bgX.beginPath(); bgX.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        bgX.fillStyle = `rgba(${p.c[0]},${p.c[1]},${p.c[2]},${p.a})`; bgX.fill();
+      });
+      streams.forEach(s => {
+        s.y += s.spd; if (s.y > bH + s.len) { s.y = -s.len; s.x = Math.random() * bW; }
+        const g = bgX.createLinearGradient(s.x, s.y - s.len, s.x, s.y);
+        g.addColorStop(0, 'transparent'); g.addColorStop(1, `rgba(${s.c},${s.a})`);
+        bgX.beginPath(); bgX.strokeStyle = g; bgX.lineWidth = s.w; bgX.moveTo(s.x, s.y - s.len); bgX.lineTo(s.x, s.y); bgX.stroke();
+      });
+      requestAnimationFrame(bgAnim);
+    }
+    bgAnim();
+
+    // ── GLOBE
+    const gC = document.getElementById('globeCanvas');
+    const gX = gC.getContext('2d');
+    let gW, gH, gAngle = 0;
+    const nodes = [
+      { lat: 38.9, lng: -77.0, c: '200,169,110', s: 7 }, { lat: 30.3, lng: -97.7, c: '200,169,110', s: 5 },
+      { lat: 37.4, lng: -122, c: '200,169,110', s: 4.5 }, { lat: 51.5, lng: -.12, c: '0,212,255', s: 4.5 },
+      { lat: 50.1, lng: 8.7, c: '0,212,255', s: 4.5 }, { lat: 52.3, lng: 4.9, c: '0,212,255', s: 3.5 },
+      { lat: 41.9, lng: 116.4, c: '255,69,96', s: 6 }, { lat: 19.1, lng: 72.8, c: '0,212,255', s: 3.5 },
+      { lat: 1.35, lng: 103.8, c: '167,139,250', s: 4 }, { lat: 35.7, lng: 139.7, c: '0,212,255', s: 3.5 },
+      { lat: -33.9, lng: 151.2, c: '0,212,255', s: 3 }, { lat: 25.2, lng: 55.3, c: '200,169,110', s: 3 },
+      { lat: -23.5, lng: -46.6, c: '0,227,150', s: 3 }, { lat: 43.7, lng: -79.4, c: '200,169,110', s: 3.5 },
+      { lat: 53.3, lng: -6.2, c: '255,69,96', s: 3 }, { lat: 59.3, lng: 18.1, c: '0,227,150', s: 2.5 },
+    ];
+    function gResize() { const r = gC.parentElement.getBoundingClientRect(); gW = gC.width = r.width; gH = gC.height = r.height; }
+    gResize(); window.addEventListener('resize', gResize);
+    function ll2xy(lat, lng, ang, cx, cy, rad) {
+      const phi = (90 - lat) * Math.PI / 180, theta = (lng + ang) * Math.PI / 180;
+      const x3 = rad * Math.sin(phi) * Math.cos(theta), y3 = rad * Math.cos(phi), z3 = rad * Math.sin(phi) * Math.sin(theta);
+      return { x: cx + x3, y: cy - y3, z: z3, v: z3 > -rad * .08 };
+    }
+    function drawGlobe() {
+      gX.clearRect(0, 0, gW, gH);
+      const cx = gW / 2, cy = gH / 2, rad = Math.min(gW, gH) * .4;
+      const bg = gX.createRadialGradient(cx - rad * .3, cy - rad * .3, 0, cx, cy, rad);
+      bg.addColorStop(0, 'rgba(18,18,32,.95)'); bg.addColorStop(.6, 'rgba(10,10,22,.97)'); bg.addColorStop(1, 'rgba(4,4,12,.99)');
+      gX.beginPath(); gX.arc(cx, cy, rad, 0, Math.PI * 2); gX.fillStyle = bg; gX.fill();
+      // Grid
+      for (let la = -75; la <= 75; la += 15) {
+        gX.beginPath(); let f = true;
+        for (let lo = -180; lo <= 180; lo += 5) { const p = ll2xy(la, lo, gAngle, cx, cy, rad); if (p.v) { if (f) { gX.moveTo(p.x, p.y); f = false; } else gX.lineTo(p.x, p.y); } else f = true; }
+        gX.strokeStyle = 'rgba(200,169,110,0.06)'; gX.lineWidth = .5; gX.stroke();
+      }
+      for (let lo = -180; lo <= 180; lo += 20) {
+        gX.beginPath(); let f = true;
+        for (let la = -90; la <= 90; la += 4) { const p = ll2xy(la, lo, gAngle, cx, cy, rad); if (p.v) { if (f) { gX.moveTo(p.x, p.y); f = false; } else gX.lineTo(p.x, p.y); } else f = true; }
+        gX.strokeStyle = 'rgba(200,169,110,0.04)'; gX.lineWidth = .4; gX.stroke();
+      }
+      // Rim glow
+      const rim = gX.createRadialGradient(cx, cy, rad * .84, cx, cy, rad);
+      rim.addColorStop(0, 'transparent'); rim.addColorStop(1, 'rgba(0,212,255,.1)');
+      gX.beginPath(); gX.arc(cx, cy, rad, 0, Math.PI * 2); gX.fillStyle = rim; gX.fill();
+      // Nodes
+      const t = Date.now() / 1000;
+      nodes.forEach(n => {
+        const p = ll2xy(n.lat, n.lng, gAngle, cx, cy, rad);
+        if (!p.v) return;
+        const df = (p.z + rad) / (2 * rad), al = .3 + df * .7;
+        const pr = n.s * 2.8 + Math.sin(t * 1.8 + n.lng * .1) * n.s * .6;
+        gX.beginPath(); gX.arc(p.x, p.y, pr, 0, Math.PI * 2);
+        gX.strokeStyle = `rgba(${n.c},${al * .45})`; gX.lineWidth = .7; gX.stroke();
+        gX.beginPath(); gX.arc(p.x, p.y, n.s * df, 0, Math.PI * 2);
+        gX.fillStyle = `rgba(${n.c},${al})`; gX.fill();
+        gX.beginPath(); gX.arc(p.x, p.y, n.s * .35 * df, 0, Math.PI * 2);
+        gX.fillStyle = `rgba(255,255,255,${al * .88})`; gX.fill();
+      });
+      // Specular
+      const sp = gX.createRadialGradient(cx - rad * .38, cy - rad * .38, 0, cx - rad * .2, cy - rad * .2, rad * .75);
+      sp.addColorStop(0, 'rgba(255,255,255,.05)'); sp.addColorStop(1, 'transparent');
+      gX.beginPath(); gX.arc(cx, cy, rad, 0, Math.PI * 2); gX.fillStyle = sp; gX.fill();
+      gAngle += .10; requestAnimationFrame(drawGlobe);
+    }
+    drawGlobe();
+
+    // ── TICKER
+    const tickerData = [
+      { k: 'GLOBAL FACILITIES', v: '8,947', c: '#C8A96E' }, { k: 'INSTALLED CAPACITY', v: '122.2 GW', c: '#00D4FF' },
+      { k: 'ENERGY 2025', v: '460 TWh = France', c: '#FFB830' }, { k: 'UN WATER 2030', v: '9.3 Trillion Liters', c: '#FF4560' },
+      { k: 'HYPERSCALER CAPEX 2026', v: '$650B (4 companies)', c: '#C8A96E' }, { k: 'AI WORKLOADS', v: '20% → 50% by 2030', c: '#A78BFA' },
+      { k: 'CAPACITY 2030', v: '200 GW (doubled)', c: '#00E396' }, { k: 'BLOCKED INVESTMENT', v: '$162B DELAYED', c: '#FF4560' },
+      { k: 'CO₂ FOOTPRINT 2025', v: '189M Tons = NYC', c: '#FFB830' }, { k: 'STARGATE TX', v: '1.2 GW · 450K NVIDIA', c: '#A78BFA' },
+      { k: 'TRANSFORMER WAIT', v: '48 Months (up from 12)', c: '#FF4560' }, { k: 'POWER SHORTFALL 2028', v: '49 GW (Morgan Stanley)', c: '#FF4560' },
+      { k: 'NUCLEAR DEALS', v: 'Three Mile Island 2028', c: '#A78BFA' }, { k: 'HYPERSCALE SHARE 2030', v: '61% Global Capacity', c: '#00E396' },
+      { k: 'DUBAI COMMITMENT', v: 'Microsoft $15.2B UAE', c: '#C8A96E' }, { k: 'AFRICA PUSH', v: 'Cassava: 12K NVIDIA GPUs', c: '#00E396' },
+    ];
+    const tt = document.getElementById('tickerTrack');
+    const all = [...tickerData, ...tickerData];
+    tt.innerHTML = all.map(d => `<div class="tick-item"><span class="tick-k">${d.k}</span><span class="tick-sep">//</span><span class="tick-v" style="color:${d.c};">${d.v}</span></div>`).join('');
+
+    // ── MAP TOOLTIP
+    let tipTO;
+    function mapTip(e, name, fac, pow, tier, status) {
+      const tip = document.getElementById('mapTip');
+      const wrap = document.querySelector('.map-svg-wrap');
+      const rect = wrap.getBoundingClientRect();
+      document.getElementById('mt-n').textContent = name;
+      document.getElementById('mt-f').textContent = fac;
+      document.getElementById('mt-p').textContent = pow;
+      document.getElementById('mt-t').textContent = tier;
+      document.getElementById('mt-s').textContent = status;
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      tip.style.left = Math.min(x + 14, rect.width - 230) + 'px';
+      tip.style.top = Math.max(y - 10, 4) + 'px';
+      tip.classList.add('vis');
+      clearTimeout(tipTO); tipTO = setTimeout(() => tip.classList.remove('vis'), 4500);
+
+      // Node Detail Side Panel trigger
+      let nodeKey = '';
+      const nameLower = name.toLowerCase();
+      if (nameLower.includes('virginia')) nodeKey = 'Virginia';
+      else if (nameLower.includes('texas') || nameLower.includes('stargate')) nodeKey = 'Texas Stargate';
+      else if (nameLower.includes('california') || nameLower.includes('silicon')) nodeKey = 'California';
+      else if (nameLower.includes('london')) nodeKey = 'London';
+      else if (nameLower.includes('frankfurt')) nodeKey = 'Frankfurt';
+      else if (nameLower.includes('netherlands') || nameLower.includes('amsterdam')) nodeKey = 'Netherlands';
+      else if (nameLower.includes('dublin') || nameLower.includes('ireland')) nodeKey = 'Dublin';
+      else if (nameLower.includes('sweden')) nodeKey = 'Sweden';
+      else if (nameLower.includes('china') || nameLower.includes('mongolia')) nodeKey = 'China';
+      else if (nameLower.includes('india') || nameLower.includes('mumbai')) nodeKey = 'India';
+      else if (nameLower.includes('singapore')) nodeKey = 'Singapore';
+      else if (nameLower.includes('japan') || nameLower.includes('tokyo')) nodeKey = 'Japan';
+      else if (nameLower.includes('dubai') || nameLower.includes('uae')) nodeKey = 'Dubai';
+      else if (nameLower.includes('australia') || nameLower.includes('sydney')) nodeKey = 'Australia';
+      else if (nameLower.includes('brazil') || nameLower.includes('são paulo')) nodeKey = 'Brazil';
+      else if (nameLower.includes('south africa') || nameLower.includes('johannesburg')) nodeKey = 'South Africa';
+      else if (nameLower.includes('kenya') || nameLower.includes('nairobi')) nodeKey = 'Kenya';
+      else if (nameLower.includes('canada') || nameLower.includes('toronto')) nodeKey = 'Canada';
+
+      if (nodeKey) {
+        updateNodePanel(nodeKey);
+      }
+    }
+
+    function setMapView(v, btn) {
+      document.querySelectorAll('.mf-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const nodes = document.querySelectorAll('.map-node');
+      const statusEl = document.getElementById('mapStatusText');
+      let count = 0;
+      let layerName = '';
+
+      nodes.forEach(n => {
+        let layers = n.getAttribute('data-layer') || '';
+        if (!layers) {
+          const onclickStr = n.getAttribute('onclick') || '';
+          const matchTarget = onclickStr.toLowerCase();
+          
+          if (matchTarget.includes('virginia') || matchTarget.includes('loudoun') || 
+              matchTarget.includes('california') || matchTarget.includes('silicon') || 
+              matchTarget.includes('london') || matchTarget.includes('frankfurt') || 
+              matchTarget.includes('mongolia') || matchTarget.includes('singapore') || 
+              matchTarget.includes('tokyo') || matchTarget.includes('canada') || 
+              matchTarget.includes('toronto') || matchTarget.includes('vancouver')) {
+            layers += ' hyperscale';
+          }
+          if (matchTarget.includes('virginia') || matchTarget.includes('loudoun') || 
+              matchTarget.includes('amsterdam') || matchTarget.includes('netherlands') || 
+              matchTarget.includes('dublin') || matchTarget.includes('ireland') || 
+              matchTarget.includes('mongolia')) {
+            layers += ' crisis';
+          }
+          if (matchTarget.includes('texas') || matchTarget.includes('abilene') || 
+              matchTarget.includes('sweden') || matchTarget.includes('stockholm') || 
+              matchTarget.includes('india') || matchTarget.includes('mumbai') || 
+              matchTarget.includes('singapore') || matchTarget.includes('dubai') || 
+              matchTarget.includes('uae') || matchTarget.includes('australia') || 
+              matchTarget.includes('sydney') || matchTarget.includes('brazil') || 
+              matchTarget.includes('são paulo') || matchTarget.includes('johannesburg') || 
+              matchTarget.includes('nairobi') || matchTarget.includes('kenya')) {
+            layers += ' growth';
+          }
+          layers = layers.trim();
+          n.setAttribute('data-layer', layers);
+        }
+      });
+
+      if (v === 'all') {
+        nodes.forEach(n => {
+          n.classList.remove('dimmed');
+          n.classList.add('highlighted');
+          count++;
+        });
+        layerName = 'ALL DEVELOPMENTS';
+      } else {
+        const filterVal = v === 'hyper' ? 'hyperscale' : v;
+        nodes.forEach(n => {
+          const layers = n.getAttribute('data-layer') || '';
+          if (layers.split(' ').includes(filterVal)) {
+            n.classList.remove('dimmed');
+            n.classList.add('highlighted');
+            count++;
+          } else {
+            n.classList.remove('highlighted');
+            n.classList.add('dimmed');
+          }
+        });
+        layerName = filterVal.toUpperCase();
+        if (layerName === 'HYPERSCALE') layerName = 'HYPERSCALE CORE';
+        if (layerName === 'CRISIS') layerName = 'CRISIS ZONES';
+      }
+
+      if (statusEl) {
+        statusEl.textContent = `FILTER: ${layerName} (${count} REGIONS ACTIVE) · CLICK NODE FOR INTEL`;
+      }
+
+      // Calculate and scale statistics dynamically
+      const capacities = {
+        'virginia': 18.0,
+        'texas': 1.2,
+        'california': 8.0,
+        'london': 5.2,
+        'frankfurt': 6.1,
+        'amsterdam': 3.8,
+        'dublin': 2.1,
+        'stockholm': 1.8,
+        'mongolia': 22.0,
+        'mumbai': 3.2,
+        'singapore': 2.1,
+        'tokyo': 4.5,
+        'dubai': 1.2,
+        'sydney': 2.8,
+        'brazil': 1.8,
+        'johannesburg': 0.4,
+        'nairobi': 0.1,
+        'canada': 4.2
+      };
+
+      let activeNodesCount = 0;
+      let totalCapacity = 0;
+      let activeHyperscaleNodes = 0;
+      const baselineHyperscaleCount = 9;
+
+      nodes.forEach(n => {
+        const layers = n.getAttribute('data-layer') || '';
+        const isHighlighted = !n.classList.contains('dimmed');
+        if (isHighlighted) {
+          activeNodesCount++;
+          const onclickStr = (n.getAttribute('onclick') || '').toLowerCase();
+          for (const [key, cap] of Object.entries(capacities)) {
+            if (onclickStr.includes(key)) {
+              totalCapacity += cap;
+              break;
+            }
+          }
+          if (layers.includes('hyperscale')) {
+            activeHyperscaleNodes++;
+          }
+        }
+      });
+
+      const scaledCapacity = (totalCapacity / 88.6) * 122.2;
+      const scaledHyperscale = Math.round((activeHyperscaleNodes / baselineHyperscaleCount) * 1297);
+
+      const nodeValEl = document.getElementById('msbActiveNodes');
+      const capValEl = document.getElementById('msbActiveCapacity');
+      const hyperValEl = document.getElementById('msbActiveHyperscale');
+
+      if (nodeValEl) nodeValEl.textContent = activeNodesCount;
+      if (capValEl) capValEl.textContent = activeNodesCount === 0 ? "0.0 GW" : scaledCapacity.toFixed(1) + ' GW';
+      if (hyperValEl) hyperValEl.textContent = activeNodesCount === 0 ? "0" : scaledHyperscale.toLocaleString();
+    }
+
+    // ── COUNT-UP
+    document.querySelectorAll('.count-el').forEach(el => {
+      const target = parseInt(el.dataset.to), dur = 2200;
+      const start = Date.now();
+      const tick = () => {
+        const p = Math.min((Date.now() - start) / dur, 1), e2 = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.floor(e2 * target).toLocaleString();
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      setTimeout(() => requestAnimationFrame(tick), 400);
+    });
+
+    // ── ANIMATE BARS (intersection observer)
+    const barObs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelectorAll('.mb-fill').forEach(el => { el.style.transform = `scaleX(${el.dataset.w})`; });
+          entry.target.querySelectorAll('.ps-fill').forEach(el => { el.style.transform = `scaleX(${el.dataset.pw})`; });
+          barObs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: .2 });
+    document.querySelectorAll('.market-bars,.power-sources').forEach(el => barObs.observe(el));
+
+    // ── CANVAS CHARTS
+    function drawLineChart(canvasId, labels, datasets, opts = {}) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.offsetWidth; canvas.width = W;
+      const H = canvas.height;
+      const pad = { t: 10, r: 16, b: 28, l: 40 };
+      const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+      ctx.clearRect(0, 0, W, H);
+
+      const allVals = datasets.flatMap(d => d.data);
+      const minV = Math.min(...allVals) * .9, maxV = Math.max(...allVals) * 1.08;
+      const scaleX = i => pad.l + (i / (labels.length - 1)) * cW;
+      const scaleY = v => pad.t + cH - ((v - minV) / (maxV - minV)) * cH;
+
+      // Grid lines
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.t + (i / 4) * cH;
+        ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = .7;
+        ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+        const val = maxV - (i / 4) * (maxV - minV);
+        ctx.fillStyle = 'rgba(136,136,168,0.6)'; ctx.font = `9px JetBrains Mono,monospace`;
+        ctx.textAlign = 'right'; ctx.fillText(opts.fmt ? opts.fmt(val) : Math.round(val), pad.l - 4, y + 3);
+      }
+
+      // X labels
+      labels.forEach((l, i) => {
+        ctx.fillStyle = 'rgba(136,136,168,0.7)'; ctx.font = `8px JetBrains Mono,monospace`;
+        ctx.textAlign = 'center'; ctx.fillText(l, scaleX(i), H - 6);
+      });
+
+      datasets.forEach(ds => {
+        // Area fill
+        ctx.beginPath();
+        ctx.moveTo(scaleX(0), scaleY(minV));
+        ds.data.forEach((v, i) => ctx.lineTo(scaleX(i), scaleY(v)));
+        ctx.lineTo(scaleX(ds.data.length - 1), scaleY(minV));
+        ctx.closePath();
+        const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
+        grad.addColorStop(0, ds.color.replace(')', ',0.18)').replace('rgb', 'rgba').replace('#C8A96E', 'rgba(200,169,110,0.18)').replace('#00D4FF', 'rgba(0,212,255,0.18)').replace('#FF4560', 'rgba(255,69,96,0.18)'));
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad; ctx.fill();
+
+        // Line
+        ctx.beginPath();
+        ds.data.forEach((v, i) => { if (i === 0) ctx.moveTo(scaleX(i), scaleY(v)); else ctx.lineTo(scaleX(i), scaleY(v)); });
+        ctx.strokeStyle = ds.color; ctx.lineWidth = 1.8; ctx.lineJoin = 'round'; ctx.stroke();
+
+        // Dots
+        ds.data.forEach((v, i) => {
+          ctx.beginPath(); ctx.arc(scaleX(i), scaleY(v), 2.8, 0, Math.PI * 2);
+          ctx.fillStyle = ds.color; ctx.fill();
+        });
+      });
+    }
+
+    // Power demand chart
+    drawLineChart('powerChart',
+      ['2022', '2023', '2024', '2025', '2026*', '2027*', '2028*', '2030*'],
+      [{ data: [270, 320, 390, 460, 1050, 1200, 1500, 1800], color: '#C8A96E', label: 'TWh' }],
+      { fmt: v => v + 'T' }
+    );
+
+    // Region capacity
+    function drawBarChart(canvasId, labels, values, colors) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.offsetWidth; canvas.width = W;
+      const H = canvas.height;
+      const pad = { t: 10, r: 10, b: 28, l: 36 };
+      ctx.clearRect(0, 0, W, H);
+      const maxV = Math.max(...values) * 1.1;
+      const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+      const bW = cW / labels.length * .6, gap = cW / labels.length;
+      // Grid
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.t + (i / 4) * cH;
+        ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = .7;
+        ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+        ctx.fillStyle = 'rgba(136,136,168,0.6)'; ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'right';
+        ctx.fillText(Math.round(maxV * (1 - i / 4)), pad.l - 4, y + 3);
+      }
+      labels.forEach((l, i) => {
+        const x = pad.l + i * gap + gap / 2 - bW / 2, bH = ((values[i] / maxV) * cH);
+        const grad = ctx.createLinearGradient(0, pad.t + cH - bH, 0, pad.t + cH);
+        grad.addColorStop(0, colors[i]); grad.addColorStop(1, colors[i].replace(')', ',0.3)').replace('rgb', 'rgba').replace('#', 'rgba(').replace(/^rgba\(([0-9A-Fa-f]{6})/, m => { const r = parseInt(m.slice(5, 7), 16), g2 = parseInt(m.slice(7, 9), 16), b = parseInt(m.slice(9, 11), 16); return `rgba(${r},${g2},${b}` }));
+        ctx.fillStyle = grad; ctx.fillRect(x, pad.t + cH - bH, bW, bH);
+        ctx.fillStyle = 'rgba(136,136,168,0.7)'; ctx.font = '8px JetBrains Mono,monospace'; ctx.textAlign = 'center';
+        ctx.fillText(l, pad.l + i * gap + gap / 2, H - 6);
+      });
+    }
+    drawBarChart('regionChart',
+      ['AMER', 'EMEA', 'APAC', 'REST'],
+      [61, 34, 21, 6],
+      ['#C8A96E', '#00D4FF', '#A78BFA', '#00E396']
+    );
+
+    // Water crisis chart
+    drawLineChart('waterChart',
+      ['2022', '2023', '2024', '2025', '2026', '2028', '2030'],
+      [{ data: [180, 240, 340, 448, 600, 1200, 9300], color: '#FF4560' }],
+      { fmt: v => v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v }
+    );
+
+    // Energy trend
+    drawLineChart('energyTrendChart',
+      ['2022', '2023', '2024', '2025', '2026', '2028', '2030'],
+      [
+        { data: [18, 22, 30, 34, 36, 40, 42], color: '#FFB830' },
+        { data: [20, 22, 25, 28, 30, 33, 36], color: '#00D4FF' },
+        { data: [5, 6, 7, 8, 10, 14, 18], color: '#A78BFA' },
+      ],
+      { fmt: v => v + '%' }
+    );
+
+    // ── AI ENGINE
+    async function sendMsg() {
+      const inp = document.getElementById('aiIn');
+      const msg = inp.value.trim();
+      if (!msg) return;
+      inp.value = '';
+      const msgs = document.getElementById('aiMsgs');
+      const typing = document.getElementById('typingWrap');
+      const uDiv = document.createElement('div'); uDiv.className = 'amsg usr'; uDiv.textContent = msg; msgs.appendChild(uDiv); msgs.scrollTop = msgs.scrollHeight;
+      typing.classList.add('on');
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        typing.classList.remove('on');
+        const text = data.reply || 'NEXUS signal disrupted. Retry.';
+        const aDiv = document.createElement('div'); aDiv.className = 'amsg bot';
+        aDiv.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+        msgs.appendChild(aDiv); msgs.scrollTop = msgs.scrollHeight;
+      } catch (e) {
+        typing.classList.remove('on');
+        const eDiv = document.createElement('div'); eDiv.className = 'amsg bot';
+        eDiv.textContent = '⚠ NEXUS connectivity disrupted. The planet continues turning. Please retry.';
+        msgs.appendChild(eDiv); msgs.scrollTop = msgs.scrollHeight;
+      }
+    }
+    function quickAsk(q) { document.getElementById('aiIn').value = q; sendMsg(); }
+
+    // ── NODE INTELLIGENCE DATA
+    const nodeIntelligenceData = {
+      "Virginia": {
+        location: "Loudoun Co., Virginia 🇺🇸",
+        facilities: "342 facilities",
+        power: "18 GW",
+        status: "GRID SATURATED",
+        risk: "Critical",
+        summary: "Primary global hyperscaler gateway. Power bottlenecks, PJM alerts, and county-wide zoning challenges are delaying new compute pipelines by 24+ months.",
+        gridPressure: "92%",
+        waterPressure: "Critical",
+        operators: "AWS, Microsoft, Google, Equinix",
+        growth: "Zoned Restrictions"
+      },
+      "Texas Stargate": {
+        location: "Abilene, Texas 🇺🇸",
+        facilities: "218 facilities",
+        power: "1.2 GW / 450K GPUs",
+        status: "EXPANDING (ACTIVE)",
+        risk: "Low Risk",
+        summary: "Next-gen AI super-cluster campus optimized for heavy LLM training. Massive land reserves and behind-the-meter wind/solar PPAs bypass standard grid delays.",
+        gridPressure: "45%",
+        waterPressure: "Medium",
+        operators: "Meta, OpenAI, xAI",
+        growth: "Accelerated (AI Supercycle)"
+      },
+      "California": {
+        location: "Silicon Valley, CA 🇺🇸",
+        facilities: "189 facilities",
+        power: "8 GW",
+        status: "CAPACITY TIGHT",
+        risk: "Medium Risk",
+        summary: "Legacy tech node with high density workloads. Power constraints limit new construction, pushing hyperscalers to rural US states.",
+        gridPressure: "78%",
+        waterPressure: "High",
+        operators: "Google, AWS, Oracle, Equinix",
+        growth: "Stable / Slow Expansion"
+      },
+      "London": {
+        location: "London Metro, UK 🇬🇧",
+        facilities: "523 facilities",
+        power: "5.2 GW",
+        status: "STABLE",
+        risk: "Medium Risk",
+        summary: "Principal gateway for UK and EMEA traffic. Grid capacity is highly contested near the M25 ring road, forcing edge expansion.",
+        gridPressure: "74%",
+        waterPressure: "Medium",
+        operators: "AWS, Google, Digital Realty",
+        growth: "Controlled Growth"
+      },
+      "Frankfurt": {
+        location: "Frankfurt Metro, Germany 🇩🇪",
+        facilities: "529 facilities",
+        power: "6.1 GW",
+        status: "GROWING",
+        risk: "High Risk",
+        summary: "EU digital core hub. Subject to strict municipal efficiency regulations and high energy costs, prompting interest in nuclear imports.",
+        gridPressure: "84%",
+        waterPressure: "Medium",
+        operators: "Equinix, CyrusOne, Digital Realty",
+        growth: "Strict Regs / Moderated"
+      },
+      "Netherlands": {
+        location: "Amsterdam Metro, Netherlands 🇳🇱",
+        facilities: "294 facilities",
+        power: "3.8 GW",
+        status: "POWER SCARCE",
+        risk: "Critical",
+        summary: "Strict government moratoriums and nitrogen emission limits constrain new data center builds. High focus on liquid cooling conversions.",
+        gridPressure: "88%",
+        waterPressure: "High",
+        operators: "AWS, Microsoft, Interxion",
+        growth: "Highly Restricted"
+      },
+      "Dublin": {
+        location: "Dublin, Ireland 🇮🇪",
+        facilities: "82 facilities",
+        power: "2.1 GW",
+        status: "GRID + WATER CRISIS",
+        risk: "Critical",
+        summary: "EirGrid connections strictly restricted. Data centers consume 21% of Ireland's total electricity, leading to political pushback and green energy mandates.",
+        gridPressure: "95%",
+        waterPressure: "High",
+        operators: "AWS, Microsoft, Google",
+        growth: "Moratorium Active"
+      },
+      "Sweden": {
+        location: "Stockholm Metro, Sweden 🇸🇪",
+        facilities: "68 facilities",
+        power: "1.8 GW",
+        status: "IDEAL CONDITIONS",
+        risk: "Optimal",
+        summary: "Excellent green energy reserve from hydro/wind assets. Low ambient temperatures minimize HVAC water requirements, making it a regional green winner.",
+        gridPressure: "30%",
+        waterPressure: "Low",
+        operators: "Microsoft, AWS, Hydro66",
+        growth: "Accelerating (Eco-friendly)"
+      },
+      "China": {
+        location: "Inner Mongolia Sovereign Compute 🇨🇳",
+        facilities: "449 facilities",
+        power: "22 GW",
+        status: "STATE-CONTROLLED",
+        risk: "High Risk",
+        summary: "Massive sovereign compute cluster under state management. Bypasses international supply chains by utilizing domestic AI silicon and localized coal/wind grids.",
+        gridPressure: "65%",
+        waterPressure: "High",
+        operators: "China Telecom, Alibaba, Tencent",
+        growth: "Exponential (State Mandated)"
+      },
+      "India": {
+        location: "Mumbai + Hyderabad, India 🇮🇳",
+        facilities: "168 facilities",
+        power: "3.2 GW",
+        status: "FAST EMERGING",
+        risk: "Medium Risk",
+        summary: "High CAGR driven by local data residency requirements. Power grid stability remains a risk, requiring significant diesel-to-gas transition plans.",
+        gridPressure: "80%",
+        waterPressure: "High",
+        operators: "Yotta, AdaniConneX, CtrlS",
+        growth: "Rapid Expansion (+15% CAGR)"
+      },
+      "Singapore": {
+        location: "Singapore 🇸🇬",
+        facilities: "168 facilities",
+        power: "2.1 GW",
+        status: "MORATORIUM LIFTED",
+        risk: "High Risk",
+        summary: "Land-constrained city-state. Moratorium lifted under strict green PUE parameters (<1.3). Focus shifting to tropical cooling standards and hydrogen.",
+        gridPressure: "85%",
+        waterPressure: "Critical",
+        operators: "Singtel, Keppel, Equinix",
+        growth: "Green-Only Expansion"
+      },
+      "Japan": {
+        location: "Tokyo Metro, Japan 🇯🇵",
+        facilities: "145 facilities",
+        power: "4.5 GW",
+        status: "STABLE",
+        risk: "Low Risk",
+        summary: "Core APAC anchor hub. Expanding into suburbs like Inzai. Seismically reinforced structures and high fiber density provide stable compute platform.",
+        gridPressure: "60%",
+        waterPressure: "Medium",
+        operators: "Equinix, Colt, KDDI",
+        growth: "Steady / Suburban"
+      },
+      "Dubai": {
+        location: "Dubai Metro, UAE 🇦🇪",
+        facilities: "48 facilities",
+        power: "1.2 GW",
+        status: "GRID PRESSURE OPTIMAL",
+        risk: "Medium Risk",
+        summary: "Geopolitical and capital haven. Accelerated by sovereign AI investments and solar farms. High summer ambient heat pushes water cooling limits.",
+        gridPressure: "50%",
+        waterPressure: "High",
+        operators: "Khazna, Equinix, Moro Hub",
+        growth: "Aggressive Capital Inflow"
+      },
+      "Australia": {
+        location: "Sydney Metro, Australia 🇦🇺",
+        facilities: "211 facilities",
+        power: "2.8 GW",
+        status: "EXPANDING",
+        risk: "Low Risk",
+        summary: "Dominant Southern Hemisphere hub. Robust subsea fiber connections. Solar capacity offset by transmission network bottlenecks.",
+        gridPressure: "62%",
+        waterPressure: "Medium",
+        operators: "NextDC, AirTrunk, CDC",
+        growth: "High Demand (Enterprise AI)"
+      },
+      "Brazil": {
+        location: "São Paulo, Brazil 🇧🇷",
+        facilities: "112 facilities",
+        power: "1.8 GW",
+        status: "LATAM CORE",
+        risk: "Medium Risk",
+        summary: "Primary gateway for South American digital workloads. Highly dependent on hydro power, introducing risk during severe drought cycles.",
+        gridPressure: "70%",
+        waterPressure: "High",
+        operators: "Ascenty, ODATA, Scala",
+        growth: "Moderate Growth"
+      },
+      "South Africa": {
+        location: "Johannesburg Metro, SA 🇿🇦",
+        facilities: "34 facilities",
+        power: "0.4 GW",
+        status: "GRID ISSUES",
+        risk: "High Risk",
+        summary: "Regional gateway facing severe utility grid challenges. Data center operators rely heavily on dedicated solar arrays and local batteries.",
+        gridPressure: "89%",
+        waterPressure: "Medium",
+        operators: "Teraco, Vantage, AWS",
+        growth: "Frontier Expansion"
+      },
+      "Kenya": {
+        location: "Nairobi Metro, Kenya 🇰🇪",
+        facilities: "12 facilities",
+        power: "0.1 GW",
+        status: "AFRICA FRONTIER",
+        risk: "Low Risk",
+        summary: "Geothermal-rich compute frontier. Low carbon footprint makes it attractive, though limited subsea fiber reach acts as a growth drag.",
+        gridPressure: "40%",
+        waterPressure: "Low",
+        operators: "iColo, Africa Data Centres",
+        growth: "Early-Stage Green Compute"
+      },
+      "Canada": {
+        location: "Toronto + Quebec, Canada 🇨🇦",
+        facilities: "338 facilities",
+        power: "4.2 GW",
+        status: "NORTH OVERFLOW",
+        risk: "Low Risk",
+        summary: "High availability of cheap hydro power in Quebec. Cold winters reduce HVAC load, absorbing overflow compute from strict US regions.",
+        gridPressure: "55%",
+        waterPressure: "Low",
+        operators: "eStruxture, Vantage, QScale",
+        growth: "Robust Green Expansion"
+      }
+    };
+
+    // ── TELEMETRY LOAD & UPDATE
+    async function fetchLiveSignals() {
+      const stockList = document.getElementById('stockSignalsList');
+      const weatherList = document.getElementById('weatherSignalsList');
+      const gridList = document.getElementById('gridLoadList');
+      const carbonList = document.getElementById('carbonIntensityList');
+      const pueList = document.getElementById('pueMetricsList');
+      const alertsList = document.getElementById('alertsLogList');
+      
+      const loadingHTML = `<div class="sig-loading">Loading infrastructure signals...</div>`;
+
+      // Set loading states
+      if (stockList) stockList.innerHTML = loadingHTML;
+      if (weatherList) weatherList.innerHTML = loadingHTML;
+      if (gridList) gridList.innerHTML = loadingHTML;
+      if (carbonList) carbonList.innerHTML = loadingHTML;
+      if (pueList) pueList.innerHTML = loadingHTML;
+      if (alertsList) alertsList.innerHTML = loadingHTML;
+
+      try {
+        const resStocks = await fetch('/api/stocks');
+        const resWeather = await fetch('/api/weather');
+        const resSignals = await fetch('/api/signals');
+        
+        let stocks = {};
+        let weather = {};
+        let signals = {};
+        
+        if (resStocks.ok) stocks = await resStocks.json();
+        if (resWeather.ok) weather = await resWeather.json();
+        if (resSignals.ok) signals = await resSignals.json();
+        
+        const combined = { stocks, weather, ...signals };
+        renderLiveSignals(combined);
+      } catch (err) {
+        const errorHTML = `<div class="sig-loading" style="color: var(--red);">Unable to load infrastructure signals.</div>`;
+        if (stockList) stockList.innerHTML = errorHTML;
+        if (weatherList) weatherList.innerHTML = errorHTML;
+        if (gridList) gridList.innerHTML = errorHTML;
+        if (carbonList) carbonList.innerHTML = errorHTML;
+        if (pueList) pueList.innerHTML = errorHTML;
+        if (alertsList) alertsList.innerHTML = errorHTML;
+      }
+    }
+
+    function renderLiveSignals(data) {
+      const stockList = document.getElementById('stockSignalsList');
+      const weatherList = document.getElementById('weatherSignalsList');
+      const gridList = document.getElementById('gridLoadList');
+      const carbonList = document.getElementById('carbonIntensityList');
+      const pueList = document.getElementById('pueMetricsList');
+      const alertsList = document.getElementById('alertsLogList');
+      const errorHTML = `<div class="sig-loading" style="color: var(--red);">Unable to load infrastructure signals.</div>`;
+
+      // Render Stocks
+      if (stockList) {
+        if (data.stocks && Object.keys(data.stocks).length > 0) {
+          const names = { NVDA: "NVIDIA Corp.", MSFT: "Microsoft Corp.", GOOG: "Alphabet Inc.", AMZN: "Amazon.com Inc.", META: "Meta Platforms" };
+          stockList.innerHTML = Object.entries(data.stocks).map(([sym, details]) => {
+            const isUp = details.changePercent.startsWith('+') || details.change >= 0;
+            const changeClass = isUp ? 'up' : 'down';
+            return `
+              <div class="stock-row">
+                <div>
+                  <span class="stock-sym">${sym}</span>
+                  <span class="stock-name">${names[sym] || ''}</span>
+                </div>
+                <div class="stock-vals">
+                  <div class="stock-price">$${details.price}</div>
+                  <div class="stock-change ${changeClass}">${details.changePercent}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          stockList.innerHTML = errorHTML;
+        }
+      }
+
+      // Render Weather
+      if (weatherList) {
+        if (data.weather && Object.keys(data.weather).length > 0) {
+          const names = { Dubai: "Dubai, UAE", Virginia: "Loudoun Co., VA", Frankfurt: "Frankfurt, GER", Singapore: "Singapore" };
+          weatherList.innerHTML = Object.entries(data.weather).map(([loc, w]) => {
+            return `
+              <div class="weather-row">
+                <div>
+                  <span class="weather-loc">${names[loc] || loc}</span>
+                  <div class="weather-detail">Humidity: ${w.humidity}% | Wind: ${w.wind}m/s</div>
+                </div>
+                <div class="weather-vals">
+                  <div class="weather-temp">${w.temp}°C</div>
+                  <div class="weather-cond">${w.condition}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          weatherList.innerHTML = errorHTML;
+        }
+      }
+
+      // Render Grid Load
+      if (gridList) {
+        if (data.gridLoad) {
+          const names = { virginia: "Virginia", dubai: "Dubai", frankfurt: "Frankfurt", singapore: "Singapore" };
+          gridList.innerHTML = Object.entries(data.gridLoad).map(([loc, val]) => {
+            const isCritical = val.includes("CRITICAL") || val.includes("HIGH");
+            const valColor = isCritical ? 'var(--red)' : 'var(--grn)';
+            return `
+              <div class="metric-row">
+                <span class="metric-label">${names[loc] || loc}</span>
+                <span class="metric-val" style="color: ${valColor};">${val}</span>
+              </div>
+            `;
+          }).join('');
+        } else {
+          gridList.innerHTML = errorHTML;
+        }
+      }
+
+      // Render Carbon Intensity
+      if (carbonList) {
+        if (data.carbonIntensity) {
+          const names = { virginia: "Virginia", dubai: "Dubai", frankfurt: "Frankfurt", singapore: "Singapore", sweden: "Sweden" };
+          carbonList.innerHTML = Object.entries(data.carbonIntensity).map(([loc, val]) => {
+            const isGreen = val.includes("GREEN") || parseFloat(val) < 50;
+            const valColor = isGreen ? 'var(--grn)' : 'var(--txt)';
+            return `
+              <div class="metric-row">
+                <span class="metric-label">${names[loc] || loc}</span>
+                <span class="metric-val" style="color: ${valColor};">${val}</span>
+              </div>
+            `;
+          }).join('');
+        } else {
+          carbonList.innerHTML = errorHTML;
+        }
+      }
+
+      // Render PUE Metrics
+      if (pueList) {
+        if (data.pueAverage) {
+          pueList.innerHTML = `
+            <div class="metric-row">
+              <span class="metric-label">Fleet Average</span>
+              <span class="metric-val" style="color: var(--gold);">${data.pueAverage.fleet}</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Best Site</span>
+              <span class="metric-val" style="color: var(--grn);">${data.pueAverage.optimal}</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Legacy Site</span>
+              <span class="metric-val" style="color: var(--red);">${data.pueAverage.legacy}</span>
+            </div>
+          `;
+        } else {
+          pueList.innerHTML = errorHTML;
+        }
+      }
+
+      // Update Alerts
+      if (alertsList) {
+        if (data.alerts && data.alerts.length > 0) {
+          alertsList.innerHTML = data.alerts.map(a => {
+            const typeClass = a.type.toLowerCase();
+            return `
+              <div class="alert-card ${typeClass}">
+                <div class="alert-card-header">
+                  <span class="alert-type ${typeClass}">${a.type}</span>
+                  <span class="alert-time">${a.time}</span>
+                </div>
+                <div class="alert-title" style="color: var(--txt); font-weight: 500; font-size: 11.5px; line-height: 1.5; margin-top: 4px;">${a.title}</div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          alertsList.innerHTML = errorHTML;
+        }
+      }
+    }
+
+    // ── REPORT GENERATOR
+    async function generateReport() {
+      const btn = document.getElementById('btnGenReport');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="report-icon">⏳</span> GENERATING INTELLIGENCE REPORT...`;
+      
+      try {
+        const res = await fetch('/api/report', { method: 'POST' });
+        if (!res.ok) throw new Error("Report generation failed");
+        const data = await res.json();
+        renderReport(data.report);
+      } catch (err) {
+        alert("Failed to generate intelligence report. Please verify connection and OpenRouter API key.");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span class="report-icon">⚡</span> GENERATE INTELLIGENCE REPORT`;
+      }
+    }
+
+    function renderReport(report) {
+      const modal = document.getElementById('reportModal');
+      const content = document.getElementById('reportContent');
+      
+      // Parse simple markdown to HTML
+      let html = report || 'No report generated.';
+      html = html
+        .replace(/### (.*?)\n/g, '<h3>$1</h3>')
+        .replace(/## (.*?)\n/g, '<h2>$1</h2>')
+        .replace(/# (.*?)\n/g, '<h1>$1</h1>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n\n/g, '<p></p>')
+        .replace(/\n- (.*?)\n/g, '<li>$1</li>')
+        .replace(/<li>(.*?)<\/li>/g, '<ul><li>$1</li></ul>')
+        .replace(/\n/g, '<br>');
+          
+      content.innerHTML = html;
+      modal.classList.add('open');
+    }
+
+    function copyReportText() {
+      const content = document.getElementById('reportContent').innerText;
+      navigator.clipboard.writeText(content).then(() => {
+        const btn = document.getElementById('btnCopyReport');
+        const origText = btn.innerHTML;
+        btn.innerHTML = `<span>✔</span> COPIED!`;
+        setTimeout(() => { btn.innerHTML = origText; }, 2000);
+      }).catch(err => {
+        alert("Failed to copy text: " + err);
+      });
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').classList.remove('open');
+    }
+
+    // ── NEWS FEED
+    async function fetchNews() {
+      const newsGrid = document.getElementById('newsGridList');
+      const loadingHTML = `<div class="sig-loading">Loading infrastructure news...</div>`;
+      const errorHTML = `<div class="sig-loading" style="color: var(--red);">Unable to load infrastructure news.</div>`;
+      
+      if (newsGrid) newsGrid.innerHTML = loadingHTML;
+      
+      try {
+        const res = await fetch('/api/news');
+        if (!res.ok) throw new Error("Offline");
+        const data = await res.json();
+        renderNews(data);
+      } catch (err) {
+        if (newsGrid) newsGrid.innerHTML = errorHTML;
+      }
+    }
+
+    function renderNews(data) {
+      const newsGrid = document.getElementById('newsGridList');
+      if (!newsGrid) return;
+      
+      newsGrid.innerHTML = data.map(item => {
+        const riskClass = item.riskTag.toLowerCase().replace(' ', '-');
+        return `
+          <div class="news-card">
+            <div class="news-header">
+              <span class="news-category">${item.category}</span>
+              <span class="news-time">${item.time}</span>
+            </div>
+            <div class="news-headline">${item.headline}</div>
+            <div class="news-footer">
+              <span class="news-source">Source: ${item.source}</span>
+              <span class="news-risk-tag ${riskClass}">${item.riskTag}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ── NODE INTELLIGENCE SIDE PANEL
+    function updateNodePanel(nodeId) {
+      const data = nodeIntelligenceData[nodeId];
+      if (!data) return;
+      
+      document.getElementById('ni-loc').textContent = data.location;
+      document.getElementById('ni-fac').textContent = data.facilities;
+      document.getElementById('ni-pow').textContent = data.power;
+      document.getElementById('ni-status').textContent = data.status;
+      document.getElementById('ni-risk').textContent = data.risk;
+      document.getElementById('ni-summary').textContent = data.summary;
+      document.getElementById('ni-grid').textContent = data.gridPressure;
+      document.getElementById('ni-water').textContent = data.waterPressure;
+      document.getElementById('ni-operators').textContent = data.operators;
+      
+      const growthEl = document.getElementById('ni-growth');
+      growthEl.textContent = data.growth;
+      
+      // Style color indicators based on risk level
+      const statusEl = document.getElementById('ni-status');
+      const riskEl = document.getElementById('ni-risk');
+      
+      statusEl.style.color = '';
+      riskEl.style.color = '';
+      
+      if (data.risk === 'Critical') {
+        riskEl.style.color = 'var(--red)';
+        statusEl.style.color = 'var(--red)';
+      } else if (data.risk === 'High Risk') {
+        riskEl.style.color = 'var(--amb)';
+        statusEl.style.color = 'var(--amb)';
+      } else if (data.risk === 'Medium Risk') {
+        riskEl.style.color = 'var(--cyan)';
+        statusEl.style.color = 'var(--cyan)';
+      } else if (data.risk === 'Optimal' || data.risk === 'Low Risk') {
+        riskEl.style.color = 'var(--grn)';
+        statusEl.style.color = 'var(--grn)';
+      }
+      
+      document.getElementById('nodeIntelPanel').classList.add('open');
+    }
+    
+    function closeNodePanel() {
+      document.getElementById('nodeIntelPanel').classList.remove('open');
+    }
+
+    window.addEventListener('click', e => {
+      const modal = document.getElementById('reportModal');
+      if (e.target === modal) {
+        closeReportModal();
+      }
+    });
+
+    // Auto load telemetry and news on DOMContentLoaded and schedule updates
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchLiveSignals();
+      fetchNews();
+    });
+    setInterval(fetchLiveSignals, 60000);
+    setInterval(fetchNews, 300000);
+  </script>
+</body>
+
+</html>
